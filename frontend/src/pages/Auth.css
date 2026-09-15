@@ -1,0 +1,306 @@
+/* LendSure auth — Zevio-inspired split screen: lime brand panel + paper form.
+   Palette: lime #7FDC2E · deep forest #0A3826 · pale #EAF6DC · paper #F5F6F1 */
+
+.zev-auth {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  font-family: var(--font);
+  color: #0e150f;
+}
+
+/* ---------------- Brand panel ---------------- */
+.zev-brand {
+  background: #7fdc2e;
+  color: #0a2e1f;
+  padding: 36px 44px 28px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+/* halftone dot texture */
+.zev-brand::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(10, 46, 31, 0.16) 1.1px, transparent 1.1px);
+  background-size: 14px 14px;
+  mask-image: linear-gradient(to bottom, transparent 55%, black 100%);
+}
+.zev-brand-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1;
+}
+.zev-brand-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: #0a3826;
+  display: grid;
+  place-items: center;
+}
+.zev-brand-name { font-weight: 800; font-size: 20px; letter-spacing: -0.02em; }
+.zev-brand-tag {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.75;
+}
+.zev-headline {
+  margin: 44px 0 0;
+  font-size: clamp(44px, 5.2vw, 76px);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  font-weight: 800;
+  z-index: 1;
+}
+.zev-headline-accent {
+  background: #0a3826;
+  color: #c9f39a;
+  padding: 0 12px 4px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+.zev-sub {
+  margin: 16px 0 0;
+  font-size: 16px;
+  font-weight: 500;
+  max-width: 46ch;
+  opacity: 0.85;
+  z-index: 1;
+}
+
+/* poster trio */
+.zev-cards {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  z-index: 1;
+}
+.zev-card {
+  border-radius: 14px;
+  padding: 16px 14px;
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(10, 56, 38, 0.18);
+}
+.zev-card-lime { background: #a4e65c; color: #0a2e1f; }
+.zev-card-pale { background: #eef7df; color: #0a2e1f; }
+.zev-card-dark { background: #0a3826; color: #eaf6dc; }
+.zev-card-logo { font-weight: 800; font-size: 14px; letter-spacing: -0.02em; }
+.zev-card-logo span { font-weight: 500; font-size: 11px; opacity: 0.7; margin-left: 4px; }
+.zev-card-title {
+  margin-top: 14px;
+  font-size: 21px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+.zev-card-foot { margin-top: auto; font-size: 10.5px; font-weight: 500; opacity: 0.7; }
+
+/* progress motif */
+.zev-progress { margin-top: 18px; }
+.zev-progress-track {
+  position: relative;
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(10, 46, 31, 0.25);
+}
+.zev-progress-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 99px;
+  background: #0a2e1f;
+}
+.zev-progress-knob {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #0a2e1f;
+  border: 3px solid #a4e65c;
+  transform: translate(-50%, -50%);
+}
+.zev-progress-pct { font-size: 11px; font-weight: 700; }
+
+/* overlapping circles motif */
+.zev-circles { position: relative; height: 92px; margin-top: 12px; }
+.zev-circle { position: absolute; border-radius: 50%; }
+.zev-c1 { width: 84px; height: 84px; left: 0; top: 4px; background: #b9e986; }
+.zev-c2 { width: 84px; height: 84px; left: 52px; top: 4px; background: #6fbf3a; opacity: 0.85; }
+.zev-c3 { width: 84px; height: 84px; left: 104px; top: 4px; background: #0a3826; opacity: 0.9; }
+
+/* dotted wave motif */
+.zev-dots {
+  height: 92px;
+  margin-top: 12px;
+  background-image: radial-gradient(#7fdc2e 1.4px, transparent 1.4px);
+  background-size: 11px 11px;
+  mask-image: radial-gradient(120px 90px at 80% 100%, black 30%, transparent 75%);
+}
+
+.zev-chips { display: flex; gap: 8px; margin-top: 26px; z-index: 1; }
+.zev-chips span {
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(10, 56, 38, 0.12);
+  border: 1px solid rgba(10, 56, 38, 0.25);
+  padding: 6px 12px;
+  border-radius: 99px;
+}
+
+/* ---------------- Form panel ---------------- */
+.zev-form-side {
+  background: #f5f6f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 28px;
+}
+.zev-form-card {
+  width: 100%;
+  max-width: 430px;
+  background: #fff;
+  border: 1px solid #e4e7de;
+  border-radius: 22px;
+  padding: 30px 30px 22px;
+  box-shadow: 0 18px 44px rgba(10, 56, 38, 0.1);
+}
+.zev-form-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 18px;
+}
+.zev-form-title { font-size: 22px; letter-spacing: -0.02em; margin: 18px 0 0; }
+.zev-form-sub { font-size: 13.5px; color: #5b665c; margin: 6px 0 18px; }
+
+.zev-notice {
+  background: #eaf6dc;
+  border: 1.5px solid #4c9a2a;
+  color: #0a3826;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.zev-tabs {
+  display: flex;
+  gap: 4px;
+  background: #eef1e8;
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 18px;
+}
+.zev-tab {
+  flex: 1;
+  padding: 9px 4px;
+  border: none;
+  background: transparent;
+  border-radius: 9px;
+  font-weight: 700;
+  font-size: 13.5px;
+  color: #5b665c;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+.zev-tab-active { background: #0a3826; color: #eaf6dc; box-shadow: 0 4px 10px rgba(10, 56, 38, 0.3); }
+
+.zev-form { display: flex; flex-direction: column; gap: 10px; }
+.zev-label { font-size: 12.5px; font-weight: 700; color: #33402f; }
+.zev-input {
+  padding: 11px 13px;
+  border: 1.5px solid #dfe3d6;
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #0e150f;
+  background: #fbfbf8;
+  transition: all 0.15s ease;
+}
+.zev-input:focus {
+  outline: none;
+  border-color: #4c9a2a;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(127, 220, 46, 0.25);
+}
+.zev-input-error { border-color: #dc2626; }
+.zev-error { color: #b91c1c; font-size: 12.5px; font-weight: 600; }
+.zev-info { color: #0a3826; background: #eaf6dc; border-radius: 10px; padding: 8px 10px; font-size: 12.5px; }
+.zev-btn { width: 100%; padding: 12px !important; font-size: 14.5px !important; margin-top: 4px; }
+.zev-hint { font-size: 12px; color: #7a847a; text-align: center; margin: 2px 0 0; }
+
+.zev-otp-label { font-size: 13px; color: #33402f; }
+.zev-otp-label b { color: #0e150f; }
+.zev-otp-boxes { display: flex; gap: 8px; margin: 2px 0; }
+.zev-otp {
+  width: 100%;
+  height: 52px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 800;
+  border: 1.5px solid #dfe3d6;
+  border-radius: 12px;
+  font-family: inherit;
+  background: #fbfbf8;
+}
+.zev-otp:focus { outline: none; border-color: #4c9a2a; box-shadow: 0 0 0 3px rgba(127, 220, 46, 0.25); }
+.zev-otp-filled { border-color: #4c9a2a; background: #eaf6dc; }
+.zev-demo-otp {
+  background: #fff8e6;
+  border: 1.5px dashed #b45309;
+  border-radius: 12px;
+  padding: 10px;
+  text-align: center;
+  font-size: 13px;
+}
+.zev-demo-otp b { font-size: 18px; letter-spacing: 0.25em; }
+.zev-resend { display: flex; justify-content: space-between; align-items: center; }
+.zev-timer { font-size: 12.5px; color: #7a847a; }
+.zev-foot { font-size: 12px; color: #7a847a; text-align: center; margin-top: 16px; }
+
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #2f7d1d;
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: underline;
+  text-align: left;
+}
+
+.fade-in { animation: zevFade 0.25s ease; }
+@keyframes zevFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 960px) {
+  .zev-auth { grid-template-columns: 1fr; }
+  .zev-brand { padding: 28px 24px; }
+  .zev-headline { font-size: 40px; margin-top: 24px; }
+  .zev-cards { grid-template-columns: 1fr 1fr 1fr; }
+  .zev-card { min-height: 200px; }
+}
+@media (max-width: 640px) {
+  .zev-cards { grid-template-columns: 1fr; }
+  .zev-card { min-height: 0; }
+  .zev-circles, .zev-dots { display: none; }
+  .zev-brand-tag { display: none; }
+}

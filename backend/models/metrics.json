@@ -1,0 +1,199 @@
+{
+  "model_id": "lendsure-ml-v3.2",
+  "trained_at": "2026-09-10T19:18:31.673262",
+  "n_features_in": 51,
+  "n_features_model": 66,
+  "engineered": [
+    "dti",
+    "lti",
+    "success_rate",
+    "repayment_capacity",
+    "verified_count",
+    "income_stability",
+    "expense_ratio",
+    "debt_service_ratio",
+    "savings_ratio",
+    "bounced_rate",
+    "dispute_rate",
+    "vouch_strength",
+    "credit_mix_score",
+    "behavioral_risk_score",
+    "financial_health_composite"
+  ],
+  "n_rows": 1500,
+  "label_rate": 0.2293,
+  "test_auc": 0.9458,
+  "test_ap": 0.8607,
+  "test_accuracy": 0.86,
+  "test_precision": 0.6627,
+  "test_recall": 0.7971,
+  "brier_score": 0.0863,
+  "log_loss": 0.2974,
+  "calibration_method": "platt-sigmoid",
+  "decision_threshold": 0.21,
+  "calibration": [
+    {
+      "bin": [
+        0.0,
+        0.1
+      ],
+      "mean_pred": 0.0832,
+      "frac_pos": 0.0062,
+      "n": 162
+    },
+    {
+      "bin": [
+        0.1,
+        0.2
+      ],
+      "mean_pred": 0.1352,
+      "frac_pos": 0.2407,
+      "n": 54
+    },
+    {
+      "bin": [
+        0.2,
+        0.3
+      ],
+      "mean_pred": 0.2507,
+      "frac_pos": 0.3846,
+      "n": 13
+    },
+    {
+      "bin": [
+        0.3,
+        0.4
+      ],
+      "mean_pred": 0.3304,
+      "frac_pos": 0.3333,
+      "n": 12
+    },
+    {
+      "bin": [
+        0.4,
+        0.5
+      ],
+      "mean_pred": 0.4517,
+      "frac_pos": 0.375,
+      "n": 8
+    },
+    {
+      "bin": [
+        0.5,
+        0.6
+      ],
+      "mean_pred": 0.5334,
+      "frac_pos": 0.6,
+      "n": 5
+    },
+    {
+      "bin": [
+        0.6,
+        0.7
+      ],
+      "mean_pred": 0.6499,
+      "frac_pos": 0.5833,
+      "n": 12
+    },
+    {
+      "bin": [
+        0.7,
+        0.8
+      ],
+      "mean_pred": 0.7506,
+      "frac_pos": 0.9444,
+      "n": 18
+    },
+    {
+      "bin": [
+        0.8,
+        0.9
+      ],
+      "mean_pred": 0.8115,
+      "frac_pos": 1.0,
+      "n": 16
+    }
+  ],
+  "validation": {
+    "n_rows": 1500,
+    "missing": "none",
+    "duplicate_rows": 0,
+    "duplicate_pct": 0.0,
+    "impossible_values": {
+      "negative_income": 0,
+      "age_out_of_range": 0,
+      "repaid_gt_prev": 0,
+      "disputes_lost_gt_raised": 0
+    },
+    "invalid_categories": {
+      "employment_type": [],
+      "purpose": []
+    },
+    "leakage_check": "pass",
+    "label_rate": 0.2293
+  },
+  "cv_auc_mean": 0.9346,
+  "cv_auc_std": 0.0101,
+  "top_drivers": [
+    {
+      "feature": "num__disputes_raised",
+      "importance": 0.0194
+    },
+    {
+      "feature": "cat__employment_type_daily-wage",
+      "importance": 0.0142
+    },
+    {
+      "feature": "cat__employment_type_salaried",
+      "importance": 0.007
+    },
+    {
+      "feature": "num__applications_30d",
+      "importance": 0.006
+    },
+    {
+      "feature": "num__address_verification",
+      "importance": 0.0046
+    },
+    {
+      "feature": "num__group_memberships",
+      "importance": 0.0032
+    },
+    {
+      "feature": "cat__purpose_education",
+      "importance": 0.003
+    },
+    {
+      "feature": "cat__purpose_medical",
+      "importance": 0.0028
+    },
+    {
+      "feature": "num__vouches_count",
+      "importance": 0.0027
+    },
+    {
+      "feature": "num__phone_verification",
+      "importance": 0.0022
+    },
+    {
+      "feature": "cat__city_Surat",
+      "importance": 0.0014
+    },
+    {
+      "feature": "cat__city_Kochi",
+      "importance": 0.0012
+    },
+    {
+      "feature": "cat__city_Mumbai",
+      "importance": 0.001
+    },
+    {
+      "feature": "num__requested_amount",
+      "importance": 0.001
+    },
+    {
+      "feature": "cat__city_Bengaluru",
+      "importance": 0.0009
+    }
+  ]
+}

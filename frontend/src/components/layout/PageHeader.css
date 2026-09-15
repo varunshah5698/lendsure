@@ -1,0 +1,10 @@
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.page-header-title { font-family: var(--font-display); font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -.02em; }
+.page-header-desc { font-size: 13.5px; color: var(--text-secondary); margin: 5px 0 0; }
+.page-header-actions { display: flex; gap: 8px; flex-shrink: 0; }

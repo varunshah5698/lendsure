@@ -1,0 +1,17 @@
+.card {
+  background: var(--surface);
+  border: 1px solid var(--pv-ink, #191a23);
+  border-radius: 14px;
+  box-shadow: var(--pv-hard, 4px 4px 0 #191a23);
+  transition: box-shadow .15s ease, transform .15s ease;
+}
+.card-hover:hover { transform: translateY(-1px); box-shadow: 6px 6px 0 #191a23; }
+.card-none { padding: 0; }
+.card-sm { padding: 16px; }
+.card-md { padding: 20px; }
+.card-lg { padding: 24px; }
+
+.card-header { margin-bottom: 16px; }
+.card-title { font-size: 15px; font-weight: 700; margin: 0; }
+.card-desc { font-size: 13px; color: var(--text-muted); margin: 4px 0 0; }
+.card-content { font-size: 14px; }

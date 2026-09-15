@@ -1,0 +1,49 @@
+# Render blueprint — deploys LendSure as one Docker web service
+# (FastAPI + SQLite + React static). Just connect the repo in Render.
+services:
+  - type: web
+    name: lendsure
+    runtime: docker
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    disk:
+      name: lendsure-data
+      mountPath: /var/data
+      sizeGB: 1
+    healthCheckPath: /api/health
+    envVars:
+      # Never expose OTPs in production. Twilio Verify credentials are entered
+      # as protected dashboard variables below.
+      - key: LENDSURE_ENV
+        value: "production"
+      - key: LENDSURE_DEMO_OTP
+        value: "0"
+      - key: LENDSURE_DB_PATH
+        value: "/var/data/lending.db"
+      # Comma-separated allowed origins (same-origin serving needs none of
+      # these, but set your public URL here if you ever split frontend/API).
+      - key: LENDSURE_CORS_ORIGINS
+        value: ""
+      # Real email OTP (optional — leave empty for demo mode):
+      - key: LENDSURE_SMTP_USER
+        sync: false
+      - key: LENDSURE_SMTP_APP_PASSWORD
+        sync: false
+      # AI assistant (Groq free tier — values entered in the Render dashboard).
+      - key: LLM_PROVIDER
+        value: "groq"
+      - key: LLM_MODEL
+        value: "openai/gpt-oss-20b"
+      - key: LLM_API_KEY
+        sync: false
+      # Real SMS OTP via Twilio Verify (required now that demo OTP is off).
+      # Values are entered in the Render dashboard, never in git.
+      - key: LENDSURE_SMS_PROVIDER
+        value: "twilio"
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_VERIFY_SERVICE_SID
+        sync: false

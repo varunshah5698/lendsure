@@ -1,0 +1,16 @@
+[
+ "credit_capacity",
+ "loan_amount",
+ "dpd_max",
+ "dpd_mean",
+ "late_count",
+ "severe_count",
+ "utilization",
+ "pay_ratio",
+ "pay_volatility",
+ "bill_trend",
+ "tenure_months",
+ "prev_defaults",
+ "dti",
+ "ontime_rate"
+]

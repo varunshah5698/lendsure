@@ -1,0 +1,16 @@
+# Keep the image working: the TRACKED seed DB + ML models ship in the image.
+# The live database (backend/lending.db) is git-ignored and seeded at boot.
+# Local backups never ship.
+node_modules/
+backend/backups/
+frontend/node_modules/
+frontend/dist/
+__pycache__/
+*.pyc
+*.pyo
+.env
+.env.local
+.DS_Store
+*.log
+.git/
+.vscode/

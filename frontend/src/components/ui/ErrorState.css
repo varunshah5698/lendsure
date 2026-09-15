@@ -1,0 +1,11 @@
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+}
+.error-icon { display: flex; justify-content: center; margin-bottom: 10px; color: var(--danger); }
+.error-title { font-size: 16px; font-weight: 700; margin: 0 0 6px; }
+.error-msg { font-size: 13.5px; color: var(--text-muted); margin: 0 0 16px; max-width: 400px; }

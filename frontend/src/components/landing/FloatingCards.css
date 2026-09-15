@@ -1,0 +1,28 @@
+.floating-cards {
+  position: relative;
+  display: flex; flex-direction: row; justify-content: center; gap: 10px;
+  z-index: 2; pointer-events: none; flex-wrap: wrap; padding: 0 8px; margin-top: 10px;
+}
+.floating-card {
+  background: rgba(15, 15, 30, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 10px;
+  padding: 8px 14px;
+  min-width: 118px;
+  animation: float 6s ease-in-out infinite;
+}
+.floating-card:nth-child(2) { animation-delay: -1.2s; }
+.floating-card:nth-child(3) { animation-delay: -2.4s; }
+.floating-card:nth-child(4) { animation-delay: -3.6s; }
+.floating-card:nth-child(5) { animation-delay: -4.8s; }
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.fc-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: rgba(199, 210, 254, 0.6); margin-bottom: 3px; }
+.fc-value { font-size: 17px; font-weight: 800; }
+.fc-sub { font-size: 10px; color: rgba(199, 210, 254, 0.5); margin-top: 2px; }
+@media (max-width: 900px) {
+  .floating-card:nth-child(n+4) { display: none; }
+}

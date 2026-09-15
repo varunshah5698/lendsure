@@ -1,0 +1,176 @@
+{
+ "model_id": "lendsure-credit-v4.1",
+ "trained_at": "2026-09-14T07:00:50.771916+00:00",
+ "data_source": {
+  "real": "UCI Default of Credit Card Clients (Yeh & Lien 2009)",
+  "real_url": "https://archive.ics.uci.edu/static/public/350/default+of+credit+card+clients.zip",
+  "real_sha256": "30c6be3abd8dcfd3e6096c828bad8c2f011238620f5369220bd60cfc82700933",
+  "real_rows": 30000,
+  "real_default_rate": 0.2212,
+  "synthetic_rows": 1000000,
+  "synthetic_default_rate": 0.257769,
+  "synthetic_method": "segment-conditional bootstrap: KMeans(16) on real rows; resample members with replacement; jitter continuous dims only (~5% of std); discrete dims copied exactly; all dims clipped to real p1/p99 (heavy tails winsorized, disclosed); tenure conditioned on age; Indian city mix with documented prior multipliers; labels from real-fitted HGB teacher + 2% flip noise",
+  "real_rows_weight_x20_in_training": true
+ },
+ "splits": {
+  "fit_real": 15000,
+  "select_real": 5000,
+  "test_real": 10000,
+  "seed": 42
+ },
+ "excluded_features": [
+  "age",
+  "city_risk"
+ ],
+ "active_features": [
+  "credit_capacity",
+  "loan_amount",
+  "dpd_max",
+  "dpd_mean",
+  "late_count",
+  "severe_count",
+  "utilization",
+  "pay_ratio",
+  "pay_volatility",
+  "bill_trend",
+  "tenure_months",
+  "prev_defaults",
+  "dti",
+  "ontime_rate"
+ ],
+ "fairness_note": "Demo model; tuned to catch potential defaults, so some flags will be incorrect. Retrained without age/city_risk for fairness; age and city must be reviewed/removed before real-world lending decisions.",
+ "candidates_select_real": {
+  "hgb": {
+   "pr_auc": 0.5401053861298202,
+   "roc_auc": 0.7712118657999371,
+   "brier": 0.16954121521171747,
+   "logloss": 0.5151229370635952,
+   "threshold": 0.27461121088616763,
+   "f2": 0.6368019284853355,
+   "precision": 0.31252053894183374,
+   "recall": 0.8598553345388789,
+   "tn": 1802,
+   "fp": 2092,
+   "fn": 155,
+   "tp": 951,
+   "n": 5000,
+   "base_rate": 0.2212
+  }
+ },
+ "selected": "hgb",
+ "selection_criterion": "max PR-AUC on REAL select split (average precision; robust to imbalance)",
+ "threshold_rule": "max F2 (beta=2, missing a default costs more than a false alarm) on REAL select",
+ "test_real_metrics": {
+  "pr_auc": 0.49677011382756314,
+  "roc_auc": 0.7611675494640525,
+  "brier": 0.14187604843296883,
+  "logloss": 0.4572941465528997,
+  "threshold": 0.27461121088616763,
+  "f2": 0.5417180073930646,
+  "precision": 0.4896579156722355,
+  "recall": 0.5565099457504521,
+  "tn": 6505,
+  "fp": 1283,
+  "fn": 981,
+  "tp": 1231,
+  "n": 10000,
+  "base_rate": 0.2212
+ },
+ "test_real_bands": [
+  {
+   "band": "Low",
+   "n": 4559,
+   "share": 0.4559,
+   "default_rate": 0.09278350515463918,
+   "captured_defaults": 0.19122965641952983
+  },
+  {
+   "band": "Medium",
+   "n": 3099,
+   "share": 0.3099,
+   "default_rate": 0.19554695062923524,
+   "captured_defaults": 0.2739602169981917
+  },
+  {
+   "band": "High",
+   "n": 1297,
+   "share": 0.1297,
+   "default_rate": 0.4109483423284503,
+   "captured_defaults": 0.24095840867992765
+  },
+  {
+   "band": "Critical",
+   "n": 1045,
+   "share": 0.1045,
+   "default_rate": 0.6220095693779905,
+   "captured_defaults": 0.2938517179023508
+  }
+ ],
+ "bands": [
+  {
+   "name": "Low",
+   "lo": 0.0,
+   "hi": 0.15
+  },
+  {
+   "name": "Medium",
+   "lo": 0.15,
+   "hi": 0.35
+  },
+  {
+   "name": "High",
+   "lo": 0.35,
+   "hi": 0.6
+  },
+  {
+   "name": "Critical",
+   "lo": 0.6,
+   "hi": 1.01
+  }
+ ],
+ "calibration": "isotonic on REAL select split (prefit)",
+ "feature_notes": {
+  "credit_capacity": "UCI LIMIT_BAL (credit limit, income-correlated) | app avg_income_6m. Different units; pipeline z-scores both.",
+  "loan_amount": "UCI LIMIT_BAL as exposure proxy | app requested_amount.",
+  "age": "UCI AGE | app age. Direct match, no proxy.",
+  "dpd_max": "UCI max(PAY_*) | app round(max_days_past_due/30), floor 0.",
+  "dpd_mean": "UCI mean(PAY_*) | app avg_delay_days/30 (may be negative).",
+  "late_count": "UCI #(PAY_*>0) | app late_payments clipped to 0..6.",
+  "severe_count": "UCI #(PAY_*>=2) | app (max_days_past_due>=60) + min(defaults,2).",
+  "utilization": "UCI mean(BILL)/LIMIT | app avg_debt_6m / max(6*avg_income_6m,1), clipped 0..3.",
+  "pay_ratio": "UCI mean(PAY_AMT/max(BILL_AMT,1)) clipped 0..2 | app loans_repaid/max(loans_repaid+late_payments,1).",
+  "pay_volatility": "UCI std(PAY_AMT)/mean(BILL) | app income_volatility/100.",
+  "bill_trend": "UCI (BILL6-BILL1)/mean(BILL) | app debt_trend as stored.",
+  "tenure_months": "Absent from UCI (NaN, median-imputed) | app tenure_months. Learned mostly from synthetic rows.",
+  "city_risk": "Absent from UCI (NaN) | app target-encoded city default prior fitted on TRAIN ONLY. City effect comes from the synthetic prior; reported as weak by design.",
+  "prev_defaults": "UCI #(PAY_*>=3) | app defaults field.",
+  "dti": "UCI BILL_AMT6/max(LIMIT_BAL,1) | app avg_debt_6m/max(avg_income_6m,1), clipped 0..5.",
+  "ontime_rate": "UCI #(PAY_*<0)/6 | app ontime_streak_months/max(ontime+late+1,1) blended with salary_credits_6m/6."
+ },
+ "versions": {
+  "sklearn": "1.7.2",
+  "xgboost": "3.4.1",
+  "lightgbm": "4.7.0",
+  "python": "3.13.9"
+ },
+ "train_seconds": 8.9,
+ "ablation_comparison": {
+  "why": "Age and city removed for fairness; kept iff metrics held.",
+  "full_16feat_hgb_test_real": {
+   "pr_auc": 0.4955,
+   "roc_auc": 0.7625,
+   "f2": 0.5448
+  },
+  "ablated_14feat_hgb_test_real_SHIPPED": {
+   "pr_auc": 0.4968,
+   "roc_auc": 0.7612,
+   "f2": 0.5417
+  },
+  "ablated_14feat_rf_test_real_NOT_SHIPPED": {
+   "pr_auc": 0.4991,
+   "roc_auc": 0.7613,
+   "reason": "178MB artifact + 1.8s/row SHAP vs 0.6MB HGB; +0.002 PR-AUC not worth it"
+  },
+  "verdict": "No measurable difference (dPR-AUC +0.001, dROC -0.001): fairness gain at no cost. Fair HGB shipped."
+ }
+}

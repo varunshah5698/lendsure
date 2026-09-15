@@ -1,0 +1,18 @@
+{
+  "n_rows": 1500,
+  "missing": "none",
+  "duplicate_rows": 0,
+  "duplicate_pct": 0.0,
+  "impossible_values": {
+    "negative_income": 0,
+    "age_out_of_range": 0,
+    "repaid_gt_prev": 0,
+    "disputes_lost_gt_raised": 0
+  },
+  "invalid_categories": {
+    "employment_type": [],
+    "purpose": []
+  },
+  "leakage_check": "pass",
+  "label_rate": 0.2293
+}

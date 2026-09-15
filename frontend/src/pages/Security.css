@@ -1,0 +1,10 @@
+.sec-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13.5px;
+}
+.sec-row:last-child { border-bottom: none; }
+.sec-label { color: var(--text); font-weight: 600; }
+.sec-ok { color: var(--success); font-weight: 700; font-size: 12px; }
+.sec-info { color: var(--primary); font-weight: 700; font-size: 12px; }
+.sec-unknown { color: var(--warning); font-weight: 700; font-size: 12px; }
+.sec-note { font-size: 12px; color: var(--text-muted); font-style: italic; }

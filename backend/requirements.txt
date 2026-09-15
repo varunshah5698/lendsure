@@ -1,0 +1,16 @@
+fastapi>=0.110,<1
+uvicorn[standard]>=0.29,<1
+pydantic>=2.0,<3
+python-multipart>=0.0.9,<1
+httpx>=0.27,<1
+# ML inference (risk_model.joblib). Keep major versions bounded for reproducible deploys.
+# Without these the engines transparently fall back to rules.
+numpy>=1.26,<3
+pandas>=2.0,<4
+# These exact versions match backend/models/metadata.json and the joblib artifacts.
+scikit-learn==1.7.2
+joblib>=1.3,<2
+# Credit-risk v4 model serving (XGBoost/LightGBM/SHAP explainability).
+xgboost==3.4.1
+lightgbm==4.7.0
+shap>=0.45,<1

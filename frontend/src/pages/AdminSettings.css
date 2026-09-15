@@ -1,0 +1,14 @@
+.settings-key-create { display: flex; gap: 10px; margin-bottom: 16px; }
+.settings-key-once {
+  background: var(--warning-light);
+  border: 1.5px dashed var(--warning);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.settings-key-value { font-size: 13px; font-weight: 700; user-select: all; letter-spacing: .02em; }

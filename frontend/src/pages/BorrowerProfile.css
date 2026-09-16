@@ -168,3 +168,19 @@
     --text-secondary: #475569; --text-muted: #94a3b8;
   }
 }
+
+/* ---------- overlay fixes: light panels + canvas ---------- */
+.bp-dark { background: #0d1322; border-radius: 20px; padding: 18px; }
+.bp-dark .bd-back-link { color: var(--text-muted); }
+.bp-dark .tsh {
+  background: linear-gradient(135deg, #1b2440 0%, #141b30 60%, #101728 100%);
+  border-color: #2c3a5f;
+}
+.bp-dark .tsh-glow { background: radial-gradient(ellipse, rgba(185,255,102,.22), transparent 70%); }
+.bp-dark .tsh-score {
+  background: linear-gradient(180deg, #ffffff, #b9ff66);
+  -webkit-background-clip: text; background-clip: text;
+}
+.bp-dark .tsh-conf { background: rgba(185,255,102,.1); border-color: #33436b; }
+.bp-dark .tsh-grade-good { color: #67e8f9; }
+.bp-dark .bd-rec-amount { color: var(--text-primary); }

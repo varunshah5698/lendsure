@@ -67,9 +67,7 @@ def _resolve_db_path() -> Path:
 
     The live DB is git-ignored (never commit data/PII). Fresh checkouts and
     deploys seed it once from backend/seed/lending.db, which IS tracked.
-    Vercel serverless: the deployment filesystem is read-only, so login
-    (which writes session/OTP rows) can never work there. Run from /tmp
-    instead, seeded from the live-or-seed file on cold boot.
+    Render runs one persistent container, so the live file is used directly.
     """
     live = LIVE_DB_PATH
     try:
@@ -82,15 +80,6 @@ def _resolve_db_path() -> Path:
             print(f"[db] seeded live database from {SEED_DB_PATH.name}", flush=True)
         except Exception as e:
             print(f"[db] seed copy failed: {e}", flush=True)
-    if os.environ.get("VERCEL"):
-        tmp = Path("/tmp/lending.db")
-        if not tmp.exists():
-            src = live if live.exists() else SEED_DB_PATH
-            try:
-                shutil.copyfile(src, tmp)
-            except Exception:
-                pass  # fall through to a fresh empty DB
-        return tmp
     return live
 
 

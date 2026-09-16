@@ -112,9 +112,9 @@ export default function SafeRiskCore({ className }) {
           <span className="lp-atom-hud-title">ATOM RISK ENGINE</span>
         </div>
         <div className="lp-atom-hud-legend">
-          <span className="lp-atom-hud-item lp-atom-hud-item--nucleus" title="Protons & Neutrons AI Cluster">
+          <span className="lp-atom-hud-item lp-atom-hud-item--nucleus" title="Borrowers — AI Risk Cluster">
             <span className="lp-hud-dot" style={{ background: "#fbbf24" }} />
-            <span className="lp-hud-text">Nucleus</span>
+            <span className="lp-hud-text">Borrowers</span>
           </span>
           <span className="lp-atom-hud-item" title="Capital & Cashflow">
             <span className="lp-hud-dot" style={{ background: "#10b981" }} />

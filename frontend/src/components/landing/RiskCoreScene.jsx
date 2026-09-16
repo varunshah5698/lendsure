@@ -1,5 +1,6 @@
 import { useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
+import { Html } from "@react-three/drei";
 import * as THREE from "three";
 
 /**
@@ -106,6 +107,25 @@ function Nucleus() {
             depthWrite={false}
           />
         </mesh>
+
+        {/* "Borrowers" label pinned to the nucleus centre */}
+        <Html center distanceFactor={8} style={{ pointerEvents: "none" }}>
+          <span
+            style={{
+              color: "#fbbf24",
+              fontFamily: "'Inter', system-ui, sans-serif",
+              fontWeight: 700,
+              fontSize: "13px",
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              textShadow: "0 0 12px rgba(251,191,36,0.7), 0 0 4px rgba(0,0,0,0.6)",
+              whiteSpace: "nowrap",
+              userSelect: "none",
+            }}
+          >
+            Borrowers
+          </span>
+        </Html>
       </group>
 
       {/* Golden/Amber boundary ring around nucleus (like yellow circle in drawing) */}

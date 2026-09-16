@@ -1,0 +1,47 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "LLM_API_KEY",
+      "description": "Groq API key for the AI Recovery Assistant (https://console.groq.com/keys). Without it the assistant returns 503 — the rest of the app works fine.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "TWILIO_ACCOUNT_SID",
+      "description": "Twilio Account SID for real SMS OTP (https://console.twilio.com). Optional — demo OTP mode is enabled by default.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "TWILIO_AUTH_TOKEN",
+      "description": "Twilio Auth Token for SMS OTP. Optional — demo mode shows codes on screen.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "TWILIO_VERIFY_SERVICE_SID",
+      "description": "Twilio Verify Service SID for SMS OTP. Optional in demo mode.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "LENDSURE_SMTP_USER",
+      "description": "Gmail address for email OTP delivery (use an App Password). Optional — demo mode shows codes on screen.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "LENDSURE_SMTP_APP_PASSWORD",
+      "description": "Gmail App Password for SMTP email OTP. Optional in demo mode.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "SENDGRID_API_KEY",
+      "description": "SendGrid API key for HTTPS email delivery (fallback when SMTP ports are blocked). Optional.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "NEWS_API_KEY",
+      "description": "NewsAPI.org key for live market headlines (https://newsapi.org/register). Without it, seeded data is used.",
+      "requiredAtBoot": false
+    }
+  ]
+}

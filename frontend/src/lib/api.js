@@ -88,30 +88,32 @@ export async function api(path, opts = {}, token = null) {
   return r.json();
 }
 
-// Auth
+// Auth (generous timeouts: Render free-tier cold starts + SMTP delivery
+// can take 30-60s on the first request after idle — never fail those fast)
+const AUTH_TIMEOUT_MS = 120000;
 export const auth = {
   requestOtp: (phone, name) =>
-    api("/auth/request-otp", { method: "POST", body: JSON.stringify({ phone, name }) }),
+    api("/auth/request-otp", { method: "POST", body: JSON.stringify({ phone, name }), timeoutMs: AUTH_TIMEOUT_MS }),
   verifyOtp: (phone, otp, name) =>
-    api("/auth/verify-otp", { method: "POST", body: JSON.stringify({ phone, otp, name }) }),
+    api("/auth/verify-otp", { method: "POST", body: JSON.stringify({ phone, otp, name }), timeoutMs: AUTH_TIMEOUT_MS }),
   guest: (name) =>
-    api("/auth/guest", { method: "POST", body: JSON.stringify({ name }) }),
+    api("/auth/guest", { method: "POST", body: JSON.stringify({ name }), timeoutMs: AUTH_TIMEOUT_MS }),
   register: (name, email, password) =>
-    api("/auth/register", { method: "POST", body: JSON.stringify({ name, email, password }) }),
+    api("/auth/register", { method: "POST", body: JSON.stringify({ name, email, password }), timeoutMs: AUTH_TIMEOUT_MS }),
   verifyEmail: (email, otp) =>
-    api("/auth/verify-email", { method: "POST", body: JSON.stringify({ email, otp }) }),
+    api("/auth/verify-email", { method: "POST", body: JSON.stringify({ email, otp }), timeoutMs: AUTH_TIMEOUT_MS }),
   resendCode: (email) =>
-    api("/auth/resend-code", { method: "POST", body: JSON.stringify({ email }) }),
+    api("/auth/resend-code", { method: "POST", body: JSON.stringify({ email }), timeoutMs: AUTH_TIMEOUT_MS }),
   otpConfig: () =>
     api("/auth/otp-config"),
   emailLogin: (email, password) =>
-    api("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
+    api("/auth/login", { method: "POST", body: JSON.stringify({ email, password }), timeoutMs: AUTH_TIMEOUT_MS }),
   verifyLogin: (email, otp) =>
-    api("/auth/verify-login", { method: "POST", body: JSON.stringify({ email, otp }) }),
+    api("/auth/verify-login", { method: "POST", body: JSON.stringify({ email, otp }), timeoutMs: AUTH_TIMEOUT_MS }),
   forgotPassword: (email) =>
-    api("/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) }),
+    api("/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }), timeoutMs: AUTH_TIMEOUT_MS }),
   resetPassword: (email, otp, new_password) =>
-    api("/auth/reset-password", { method: "POST", body: JSON.stringify({ email, otp, new_password }) }),
+    api("/auth/reset-password", { method: "POST", body: JSON.stringify({ email, otp, new_password }), timeoutMs: AUTH_TIMEOUT_MS }),
   me: (token) => api("/auth/me", {}, token),
   logout: (token) => api("/auth/logout", { method: "POST" }, token),
 };

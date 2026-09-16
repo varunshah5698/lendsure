@@ -262,7 +262,7 @@ export default function Auth() {
                     </button>
                   )}
                   <Button variant="primary" className="zev-btn" onClick={handleSignIn} disabled={loading}>
-                    {loading ? "Signing in…" : "Sign in →"}
+                    {loading ? "Signing in… (up to ~60s on cold start)" : "Sign in →"}
                   </Button>
                   <p className="zev-hint">Stays signed in on this device — sign up once, use it forever.</p>
                 </div>
@@ -283,7 +283,7 @@ export default function Auth() {
                   {error && <div className="zev-error">{error}</div>}
                   {info && <div className="zev-info">{info}</div>}
                   <Button variant="primary" className="zev-btn" onClick={handleSignUp} disabled={loading}>
-                    {loading ? "Creating…" : "Create account →"}
+                    {loading ? "Creating… (up to ~60s on cold start)" : "Create account →"}
                   </Button>
                   <p className="zev-hint">Next: we’ll open a verification-code step to activate your account.</p>
                 </div>

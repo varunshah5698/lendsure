@@ -30,6 +30,10 @@ services:
         sync: false
       - key: LENDSURE_SMTP_APP_PASSWORD
         sync: false
+      # HTTPS email API for hosts that block SMTP ports (Render free tier
+      # cannot reach smtp.gmail.com). Keep LENDSURE_SMTP_USER as the sender.
+      - key: SENDGRID_API_KEY
+        sync: false
       # AI assistant (Groq free tier — values entered in the Render dashboard).
       - key: LLM_PROVIDER
         value: "groq"

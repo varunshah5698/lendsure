@@ -1,4 +1,6 @@
 """Authentication, OTP discipline, sessions, rate limits, CSRF."""
+import io
+
 import app as app_module
 
 
@@ -321,3 +323,42 @@ def test_email_status_has_no_secrets(client):
     r = client.get("/api/auth/email-status")
     assert r.status_code == 200
     assert "smtp_configured" in r.json() and "demo_otp" in r.json()
+
+
+def test_sendgrid_path_sends_over_https(client, monkeypatch):
+    import io
+    import urllib.request
+    monkeypatch.setenv("SENDGRID_API_KEY", "SG.testkey")
+    monkeypatch.setenv("LENDSURE_SMTP_USER", "sender@gmail.com")
+    seen = {}
+
+    class FakeResp:
+        status = 202
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def read(self): return b""
+
+    def fake(req, timeout=None):
+        seen["url"] = req.full_url
+        seen["auth"] = req.headers.get("Authorization")
+        return FakeResp()
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake)
+    assert app_module.send_email_otp("to@gmail.com", "123456", "verify") is True
+    assert seen["url"] == "https://api.sendgrid.com/v3/mail/send"
+    assert seen["auth"] == "Bearer SG.testkey"
+
+
+def test_sendgrid_failure_falls_back_to_smtp_disabled(client, monkeypatch):
+    import urllib.request
+    monkeypatch.setenv("SENDGRID_API_KEY", "SG.bad")
+    monkeypatch.setenv("LENDSURE_SMTP_USER", "")
+    monkeypatch.setenv("LENDSURE_SMTP_APP_PASSWORD", "")
+    monkeypatch.setenv("LENDSURE_DEMO_OTP", "1")
+    import urllib.error
+    def boom(req, timeout=None):
+        raise urllib.error.HTTPError(req.full_url, 401, "Unauthorized", {}, io.BytesIO(b"bad key"))
+    monkeypatch.setattr(urllib.request, "urlopen", boom)
+    # SMTP unconfigured + SendGrid failing: demo echo path still answers.
+    assert app_module._email_configured() is True  # sendgrid key present
+    assert app_module.send_email_otp("to@gmail.com", "123456", "verify") is False

@@ -765,6 +765,8 @@ def email_status():
     OTP can actually send right now, and why not if it can't."""
     user = "".join(os.environ.get("LENDSURE_SMTP_USER", "").split())
     return {"smtp_configured": _smtp_configured(),
+            "sendgrid_configured": _sendgrid_configured(),
+            "email_configured": _email_configured(),
             "demo_otp": DEMO_OTP,
             "smtp_user_set": bool(user),
             "smtp_domain": user.split("@")[-1] if "@" in user else ""}
@@ -880,6 +882,56 @@ def _smtp_configured() -> bool:
                 and "".join(os.environ.get("LENDSURE_SMTP_APP_PASSWORD", "").split()))
 
 
+def _sendgrid_configured() -> bool:
+    return bool((os.environ.get("SENDGRID_API_KEY") or "").strip())
+
+
+def _email_configured() -> bool:
+    return _sendgrid_configured() or _smtp_configured()
+
+
+def _send_via_sendgrid(to_email: str, code: str, purpose: str) -> bool:
+    """HTTPS email API (port 443) for hosts that block outbound SMTP
+    (e.g. Render free tier: smtp.gmail.com is unreachable from there).
+    Stdlib only. Returns True on 2xx from the SendGrid v3 API."""
+    import urllib.request
+    api_key = (os.environ.get("SENDGRID_API_KEY") or "").strip()
+    sender = "".join(os.environ.get("LENDSURE_SMTP_USER", "").split())
+    if not api_key or not sender:
+        return False
+    action = ("verify your email address" if purpose == "verify"
+              else "confirm it's you on this device" if purpose == "login"
+              else "reset your password")
+    body = json.dumps({
+        "personalizations": [{"to": [{"email": to_email}]}],
+        "from": {"email": sender, "name": "LendSure"},
+        "subject": f"Your LendSure verification code is {code}",
+        "content": [{"type": "text/plain",
+                     "value": (f"Your LendSure verification code is: {code}\n\n"
+                               f"Use it to {action}. It expires in {EMAIL_OTP_TTL_MIN} minutes.\n\n"
+                               "If you didn't request this, you can safely ignore this email.")}],
+    }).encode()
+    req = urllib.request.Request(
+        "https://api.sendgrid.com/v3/mail/send", data=body,
+        headers={"Content-Type": "application/json",
+                 "Authorization": f"Bearer {api_key}",
+                 "User-Agent": "LendSure/1.0"},
+        method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            return 200 <= r.status < 300
+    except urllib.error.HTTPError as e:
+        try:
+            detail = e.read().decode("utf-8", "replace")[:200]
+        except Exception:
+            detail = ""
+        print(f"[SendGrid] send failed for {to_email}: HTTP {e.code} {detail}", flush=True)
+        return False
+    except Exception as e:
+        print(f"[SendGrid] send failed for {to_email}: {e}", flush=True)
+        return False
+
+
 def send_email_otp(to_email: str, code: str, purpose: str) -> bool:
     # App passwords are displayed in spaced groups — strip all whitespace
     # so a pasted-with-spaces password still authenticates.
@@ -887,6 +939,11 @@ def send_email_otp(to_email: str, code: str, purpose: str) -> bool:
     pwd = "".join(os.environ.get("LENDSURE_SMTP_APP_PASSWORD", "").split())
     host = os.environ.get("LENDSURE_SMTP_HOST", "smtp.gmail.com")
     port = int(os.environ.get("LENDSURE_SMTP_PORT", "587"))
+    # Preferred on hosted networks: HTTPS API first (Render blocks SMTP ports).
+    if _sendgrid_configured() and user:
+        if _send_via_sendgrid(to_email, code, purpose):
+            return True
+        print("[email] SendGrid failed, falling back to SMTP", flush=True)
     if not user or not pwd:
         if DEMO_OTP and os.environ.get("LENDSURE_LOG_CODES") == "1":
             print(f"[EMAIL-OTP] {to_email} -> {code} ({purpose}) — SMTP not configured, demo mode", flush=True)

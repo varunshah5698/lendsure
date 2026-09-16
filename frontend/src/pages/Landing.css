@@ -99,26 +99,273 @@
   border-radius: 45px; box-shadow: var(--pv-shadow); overflow: hidden;
 }
 .lp-hero-scene { position: absolute; inset: 0; }
-.lp-scene-fallback {
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse 45% 35% at 50% 50%, rgba(185,255,102,.55), transparent 70%);
-  display: flex; align-items: center; justify-content: center;
+
+/* ---------- ATOM HUD & LEGEND ---------- */
+.lp-atom-hud {
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  right: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  z-index: 8;
+  pointer-events: none;
 }
-.lp-fallback-orb {
-  width: 80px; height: 80px; border-radius: 20px;
-  background: var(--pv-lime); border: 1px solid var(--pv-ink);
-  box-shadow: var(--pv-shadow);
-  animation: fallbackPulse 3s ease-in-out infinite;
+.lp-atom-hud-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--pv-ink);
+  border-radius: 999px;
+  padding: 6px 14px;
+  box-shadow: 0 2px 0 var(--pv-ink);
 }
-.lp-fallback-ring {
-  position: absolute; border-radius: 50%;
+.lp-atom-hud-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: atomPulse 2s ease-in-out infinite;
+}
+.lp-atom-hud-title {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--pv-ink);
+}
+.lp-atom-hud-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.lp-atom-hud-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(25, 26, 35, 0.25);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pv-ink);
+}
+.lp-atom-hud-item--nucleus {
+  border-color: #f59e0b;
+  background: rgba(254, 243, 199, 0.85);
+  font-weight: 700;
+}
+.lp-hud-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.lp-hud-text {
+  font-size: 11px;
+  line-height: 1;
+}
+
+/* ---------- 3D-TRACKED ATOM ELECTRON BADGES ---------- */
+.lp-atom-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #ffffff;
   border: 1.5px solid var(--pv-ink);
+  border-radius: 999px;
+  padding: 4px 11px 4px 9px;
+  box-shadow: 0 3px 0 var(--pv-ink);
+  pointer-events: none;
+  white-space: nowrap;
+  user-select: none;
+  will-change: transform;
+  z-index: 6;
+  transition: box-shadow 0.15s ease;
 }
-.lp-fallback-ring--1 { width: 160px; height: 160px; animation: fallbackSpin 12s linear infinite; }
-.lp-fallback-ring--2 { width: 240px; height: 240px; animation: fallbackSpin 18s linear infinite reverse; }
-.lp-fallback-ring--3 { width: 320px; height: 320px; animation: fallbackSpin 26s linear infinite; }
-@keyframes fallbackPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-@keyframes fallbackSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.lp-atom-badge-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.lp-atom-badge-name {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--pv-ink);
+}
+.lp-atom-badge-icon {
+  font-size: 11px;
+  line-height: 1;
+}
+
+.lp-atom-badge--money {
+  border-color: #047857;
+  background: #ecfdf5;
+}
+.lp-atom-badge--fraud {
+  border-color: #b91c1c;
+  background: #fef2f2;
+}
+.lp-atom-badge--credit {
+  border-color: #4338ca;
+  background: #eef2ff;
+}
+.lp-atom-badge--trust {
+  border-color: #0e7490;
+  background: #ecfeff;
+}
+
+@keyframes atomPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.25); opacity: 0.7; }
+}
+
+/* ---------- ATOM CSS FALLBACK ---------- */
+.lp-scene-fallback.lp-atom-fallback {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(254,243,199,0.35) 0%, rgba(243,243,243,0.95) 75%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.lp-atom-fb-nucleus {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  animation: atomSpinSlow 24s linear infinite;
+}
+.lp-atom-fb-ring {
+  position: absolute;
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  border: 2px solid #f59e0b;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.4);
+}
+.lp-atom-fb-particle {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+.lp-atom-fb-particle.red {
+  background: radial-gradient(circle at 35% 35%, #f87171, #dc2626);
+}
+.lp-atom-fb-particle.blue {
+  background: radial-gradient(circle at 35% 35%, #60a5fa, #1d4ed8);
+}
+.lp-atom-fb-particle.p1 { top: 12px; left: 18px; }
+.lp-atom-fb-particle.p2 { top: 14px; right: 18px; }
+.lp-atom-fb-particle.p3 { bottom: 14px; left: 16px; }
+.lp-atom-fb-particle.p4 { bottom: 12px; right: 16px; }
+.lp-atom-fb-particle.p5 { top: 34px; left: 10px; }
+.lp-atom-fb-particle.p6 { top: 34px; right: 10px; }
+.lp-atom-fb-particle.p7 { top: 34px; left: 34px; }
+.lp-atom-fb-particle.p8 { top: 22px; left: 32px; }
+
+/* 4 Crossing CSS Elliptical Orbits */
+.lp-atom-fb-orbit {
+  position: absolute;
+  width: 320px;
+  height: 140px;
+  border: 1.5px solid rgba(25, 26, 35, 0.35);
+  border-radius: 50%;
+}
+.lp-atom-fb-orbit.o1 {
+  transform: rotate(-35deg);
+  border-color: rgba(16, 185, 129, 0.45);
+}
+.lp-atom-fb-orbit.o2 {
+  transform: rotate(35deg);
+  border-color: rgba(239, 68, 68, 0.45);
+}
+.lp-atom-fb-orbit.o3 {
+  transform: rotate(-75deg);
+  border-color: rgba(99, 102, 241, 0.45);
+}
+.lp-atom-fb-orbit.o4 {
+  transform: rotate(75deg);
+  border-color: rgba(6, 182, 212, 0.45);
+}
+.lp-atom-fb-electron {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lp-atom-fb-electron.money {
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+  animation: fbOrbitSpin 8s linear infinite;
+}
+.lp-atom-fb-electron.fraud {
+  background: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+  animation: fbOrbitSpin 9s linear infinite reverse;
+}
+.lp-atom-fb-electron.credit {
+  background: #6366f1;
+  box-shadow: 0 0 10px #6366f1;
+  animation: fbOrbitSpin 10s linear infinite;
+}
+.lp-atom-fb-electron.trust {
+  background: #06b6d4;
+  box-shadow: 0 0 10px #06b6d4;
+  animation: fbOrbitSpin 7.5s linear infinite reverse;
+}
+.lp-atom-fb-tag {
+  position: absolute;
+  top: -24px;
+  white-space: nowrap;
+  background: #fff;
+  border: 1px solid var(--pv-ink);
+  box-shadow: 0 2px 0 var(--pv-ink);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  color: var(--pv-ink);
+}
+
+@keyframes atomSpinSlow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes fbOrbitSpin {
+  0% { transform: rotate(0deg) translateX(160px) rotate(0deg); }
+  100% { transform: rotate(360deg) translateX(160px) rotate(-360deg); }
+}
 
 /* approval-wave fallback (bottom CTA) */
 .lp-wave-fallback {

@@ -91,8 +91,10 @@ export default function Auth() {
       {/* ---------- Brand panel ---------- */}
       <aside className="zev-brand">
         <div className="zev-brand-top">
-          <span className="zev-brand-mark"><Logo size={26} /></span>
-          <span className="zev-brand-name">LendSure</span>
+          <Link to="/" className="zev-brand-link" title="Back to home page">
+            <span className="zev-brand-mark"><Logo size={26} /></span>
+            <span className="zev-brand-name">LendSure</span>
+          </Link>
           <span className="zev-brand-tag">Decision-support for lenders</span>
         </div>
 
@@ -144,7 +146,9 @@ export default function Auth() {
       {/* ---------- Form panel ---------- */}
       <main className="zev-form-side">
         <div className="zev-form-card">
-          <div className="zev-form-logo"><Logo size={34} /> LendSure</div>
+          <Link to="/" className="zev-form-logo zev-brand-link" title="Back to home page">
+            <Logo size={34} /> LendSure
+          </Link>
           <h2 className="zev-form-title">Welcome to your workspace</h2>
           <p className="zev-form-sub">Sign in, create an account, or explore as a guest.</p>
 

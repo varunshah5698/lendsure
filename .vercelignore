@@ -1,8 +1,0 @@
-# Keep the serverless function bundle lean.
-backend/backups/
-backend/__pycache__/
-backend/*/__pycache__/
-backend/ml_credit/__pycache__/
-.env
-.env.local
-*.log

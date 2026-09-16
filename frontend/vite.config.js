@@ -3,9 +3,9 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  // Local Docker flow serves built files from FastAPI at /static/ (backend/static).
-  // Vercel Services serves the frontend from / — so use / base when building on Vercel.
-  base: process.env.VERCEL ? "/" : "/static/",
+  // Render flow: FastAPI serves the built files from /static/ (backend/static).
+  // The Docker image rebuilds the frontend with --outDir /app-static.
+  base: "/static/",
   server: {
     port: 5173,
     proxy: {
@@ -20,7 +20,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: process.env.VERCEL ? "dist" : "../backend/static",
+    outDir: "../backend/static",
     emptyOutDir: true,
   },
 });

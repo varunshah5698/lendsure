@@ -35,6 +35,15 @@
   gap: 10px;
   z-index: 1;
 }
+.zev-brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 10px;
+}
+.zev-brand-link:hover { opacity: 0.85; }
 .zev-brand-mark {
   width: 38px;
   height: 38px;

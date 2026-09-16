@@ -50,22 +50,30 @@ function CoreShell() {
   );
 }
 
-/* Six glowing nodes, each revolving on its OWN tilted orbital disc —
-   wide radius separation, gentle inclinations, even phasing: structured
-   orbits, never spaghetti. Inner discs run faster (Kepler-style).
-   Labels are pushed radially outward from the projected center so they
-   cannot stack on each other. */
-const ORBITS = [
-  { label: "INCOME", r: 2.2, tilt: [-0.34, 0, 0.16], speed: 0.5, phase: 0.0 },
-  { label: "DEBT", r: 2.38, tilt: [-0.18, 0, -0.22], speed: 0.45, phase: 1.05 },
-  { label: "HISTORY", r: 2.56, tilt: [0.2, 0, 0.2], speed: 0.4, phase: 2.1 },
-  { label: "FRAUD", r: 2.74, tilt: [-0.1, 0, -0.1], speed: 0.36, phase: 3.15 },
-  { label: "BEHAVIOR", r: 2.92, tilt: [0.32, 0, -0.2], speed: 0.32, phase: 4.2 },
-  { label: "IDENTITY", r: 3.1, tilt: [-0.26, 0, 0.1], speed: 0.29, phase: 5.25 },
+/* Four wide-spaced orbital discs, one node each: FRAUD always shown plus
+   three random companions picked per visit. Big radius gaps + gentle,
+   near-coplanar tilts keep every ring visually separate — rings of
+   different radii can never touch. Inner discs run faster. */
+const RING_DEFS = [
+  { r: 1.85, tilt: [-0.34, 0, 0.12], speed: 0.5, phase: 0.0 },
+  { r: 2.3, tilt: [-0.22, 0, -0.14], speed: 0.42, phase: 1.62 },
+  { r: 2.75, tilt: [0.2, 0, 0.18], speed: 0.35, phase: 3.2 },
+  { r: 3.15, tilt: [-0.28, 0, -0.06], speed: 0.3, phase: 4.75 },
 ];
+const COMPANIONS = ["INCOME", "DEBT", "HISTORY", "BEHAVIOR", "IDENTITY"];
 
 function Nodes({ onPositions }) {
   const refs = useRef([]);
+  // FRAUD + three random companions, stable for this visit.
+  const orbits = useMemo(() => {
+    const pool = [...COMPANIONS];
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    const labels = ["FRAUD", ...pool.slice(0, 3)];
+    return RING_DEFS.map((d, i) => ({ ...d, label: labels[i] }));
+  }, []);
 
   useFrame(({ clock, camera, size }) => {
     const t = clock.getElapsedTime();
@@ -77,7 +85,7 @@ function Nodes({ onPositions }) {
     const cy = ((-c.y + 1) / 2) * size.height;
     refs.current.forEach((r, i) => {
       if (!r) return;
-      const o = ORBITS[i];
+      const o = orbits[i];
       const angle = o.phase + t * o.speed;
       r.position.x = Math.cos(angle) * o.r;
       r.position.y = Math.sin(angle) * o.r;
@@ -103,7 +111,7 @@ function Nodes({ onPositions }) {
 
   return (
     <>
-      {ORBITS.map((o, i) => (
+      {orbits.map((o, i) => (
         <group key={o.label} rotation={o.tilt}>
           {/* this dimension's own orbital disc */}
           <mesh>

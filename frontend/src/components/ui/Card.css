@@ -1,17 +1,21 @@
 .card {
   background: var(--surface);
-  border: 1px solid var(--pv-ink, #191a23);
-  border-radius: 14px;
-  box-shadow: var(--pv-hard, 4px 4px 0 #191a23);
-  transition: box-shadow .15s ease, transform .15s ease;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease;
 }
-.card-hover:hover { transform: translateY(-1px); box-shadow: 6px 6px 0 #191a23; }
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: #cdd6bf;
+}
 .card-none { padding: 0; }
 .card-sm { padding: 16px; }
-.card-md { padding: 20px; }
-.card-lg { padding: 24px; }
+.card-md { padding: 22px; }
+.card-lg { padding: 28px; }
 
 .card-header { margin-bottom: 16px; }
-.card-title { font-size: 15px; font-weight: 700; margin: 0; }
-.card-desc { font-size: 13px; color: var(--text-muted); margin: 4px 0 0; }
+.card-title { font-size: 15.5px; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+.card-desc { font-size: 13px; color: var(--text-muted); margin: 5px 0 0; }
 .card-content { font-size: 14px; }

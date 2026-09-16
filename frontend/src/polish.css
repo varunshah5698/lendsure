@@ -8,7 +8,7 @@
   box-shadow: 0 10px 28px rgba(0, 0, 0, .14);
 }
 .data-table tbody tr.clickable { transition: background .12s ease; }
-.data-table tbody tr.clickable:hover { background: rgba(99, 102, 241, .06); }
+.data-table tbody tr.clickable:hover { background: rgba(163, 230, 53, .10); }
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
@@ -45,7 +45,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   width: 44px;
   height: 3px;
   border-radius: 4px;
-  background: linear-gradient(90deg, var(--pv-lime), #818cf8);
+  background: linear-gradient(90deg, var(--pv-lime), #14b8a6);
 }
 .card, .metric-card, .fi-summary-card, .fi-market-card, .fi-econ-card,
 .fi-watchlist-item, .lp-risk-card, .lp-pipeline-stage, .lp-scenario-card,
@@ -55,14 +55,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .card:hover, .metric-card:hover, .fi-summary-card:hover, .fi-econ-card:hover,
 .fi-watchlist-item:hover, .lp-risk-card:hover, .lp-scenario-card:hover {
   transform: translateY(-3px);
-  border-color: rgba(129, 140, 248, .45);
+  border-color: rgba(163, 230, 53, .55);
   box-shadow: 0 14px 34px rgba(15,23,42,.10);
 }
 button, .btn, a.link-btn { transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
 button:not(:disabled):hover, .btn:not(:disabled):hover { transform: translateY(-1px); }
 .data-table thead th { letter-spacing: .06em; text-transform: uppercase; font-size: 10px; }
 .data-table tbody tr { transition: background .14s ease; }
-.data-table tbody tr.clickable:hover { background: rgba(129,140,248,.07); }
+.data-table tbody tr.clickable:hover { background: rgba(163,230,53,.10); }
 @media (prefers-reduced-motion: reduce) {
   .card:hover, .metric-card:hover, .fi-summary-card:hover, .fi-econ-card:hover,
   .fi-watchlist-item:hover, .lp-risk-card:hover, .lp-scenario-card:hover,

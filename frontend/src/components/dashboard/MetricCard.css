@@ -1,16 +1,16 @@
-/* Dashboard metric card — Positivus language: ink border, hard offset shadow. */
+/* Dashboard metric card — soft modern surface. */
 .metric-card {
-  background: #fff;
-  border: 1px solid #191a23;
-  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
   padding: 18px;
   position: relative;
-  box-shadow: 4px 4px 0 #191a23;
-  transition: box-shadow .15s ease, transform .15s ease;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease;
 }
 .metric-card:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 5px 5px 0 #191a23;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 .metric-row {
   display: flex;
@@ -25,52 +25,50 @@
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.1;
-  color: #191a23;
+  color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }
 .metric-label {
   font-size: 11.5px;
   font-weight: 600;
-  color: #5d6069;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: .06em;
   margin-top: 6px;
   line-height: 1.45;
 }
 .metric-chip {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: #b9ff66;
-  color: #191a23;
-  border: 1px solid #191a23;
+  background: var(--primary-light);
+  color: var(--primary);
 }
-.metric-success .metric-chip { background: #e6f7ee; color: #12a56b; }
-.metric-warning .metric-chip { background: #fff4d6; color: #b7791f; }
-.metric-danger .metric-chip { background: #fdecec; color: #e5484d; }
+.metric-success .metric-chip { background: var(--success-light); color: var(--success); }
+.metric-warning .metric-chip { background: var(--warning-light); color: var(--warning); }
+.metric-danger .metric-chip { background: var(--danger-light); color: var(--danger); }
 .metric-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #eef0f3;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-light);
 }
-.metric-sub { font-size: 12px; color: #5d6069; }
+.metric-sub { font-size: 12px; color: var(--text-muted); }
 .metric-trend {
   font-size: 11.5px;
   font-weight: 700;
   padding: 3px 10px;
   border-radius: 20px;
-  background: #f1f2f4;
-  color: #191a23;
+  background: var(--bg-alt);
+  color: var(--text-secondary);
   white-space: nowrap;
-  border: 1px solid #191a23;
 }
-.trend-up { color: #12a56b; background: #e6f7ee; }
-.trend-down { color: #e5484d; background: #fdecec; }
+.trend-up { color: var(--success); background: var(--success-light); }
+.trend-down { color: var(--danger); background: var(--danger-light); }

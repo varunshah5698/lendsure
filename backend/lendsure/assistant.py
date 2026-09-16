@@ -101,24 +101,67 @@ def llm_config() -> dict:
     }
 
 
+def _retry_wait_s(err: "urllib.error.HTTPError", detail: str) -> float:
+    """How long the provider asked us to wait (seconds, capped)."""
+    try:
+        h = err.headers.get("Retry-After") if err.headers else None
+        if h is not None:
+            return max(1.0, min(float(str(h).strip()), 20.0))
+    except Exception:
+        pass
+    import re
+    m = re.search(r"try again in ([\d.]+)s", detail or "")
+    if m:
+        try:
+            return max(1.0, min(float(m.group(1)), 20.0))
+        except Exception:
+            pass
+    return 5.0
+
+
 def _post_json(url: str, payload: dict, api_key: str, timeout: int) -> dict:
     data = json.dumps(payload).encode()
-    req = urllib.request.Request(
-        url, data=data,
-        headers={"Content-Type": "application/json",
-                 "Authorization": f"Bearer {api_key}",
-                 # Identified UA: bare urllib gets challenged by provider WAFs.
-                 "User-Agent": "LendSure-Assistant/1.0"},
-        method="POST")
-    try:
+
+    def _attempt() -> dict:
+        req = urllib.request.Request(
+            url, data=data,
+            headers={"Content-Type": "application/json",
+                     "Authorization": f"Bearer {api_key}",
+                     # Identified UA: bare urllib gets challenged by provider WAFs.
+                     "User-Agent": "LendSure-Assistant/1.0"},
+            method="POST")
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return json.loads(r.read().decode("utf-8", "replace"))
+
+    try:
+        return _attempt()
     except urllib.error.HTTPError as e:
         try:
             detail = e.read().decode("utf-8", "replace")[:300]
         except Exception:
             detail = ""
         print(f"[assistant] provider HTTP {e.code}: {detail}", flush=True)
+        if e.code == 429:
+            # Free-tier per-minute caps: honor the provider's own backoff once
+            # instead of failing instantly (one sleep keeps us inside the
+            # frontend's 95s budget even on the slowest path).
+            wait = _retry_wait_s(e, detail)
+            print(f"[assistant] rate-limited, retrying once after {wait:.1f}s", flush=True)
+            time.sleep(wait)
+            try:
+                return _attempt()
+            except urllib.error.HTTPError as e2:
+                try:
+                    d2 = e2.read().decode("utf-8", "replace")[:300]
+                except Exception:
+                    d2 = ""
+                print(f"[assistant] provider HTTP {e2.code} on retry: {d2}", flush=True)
+                if e2.code == 429:
+                    raise HTTPException(429, "AI provider is busy right now — wait a minute and ask again.")
+                e, detail = e2, d2
+            except Exception:
+                print("[assistant] provider retry failed", flush=True)
+                raise HTTPException(502, "AI provider unreachable. Try again in a moment.")
         if e.code == 429:
             raise HTTPException(429, "AI provider is busy right now — wait a minute and ask again.")
         if e.code == 402:

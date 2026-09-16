@@ -50,15 +50,16 @@ function CoreShell() {
   );
 }
 
-/* Four wide-spaced orbital discs, one node each: FRAUD always shown plus
-   three random companions picked per visit. Big radius gaps + gentle,
-   near-coplanar tilts keep every ring visually separate — rings of
-   different radii can never touch. Inner discs run faster. */
+/* Solar system: ONE shared orbital plane for all four discs, equal radius
+   gaps — concentric rings can never cut each other. Inner discs run
+   faster (Kepler-style). Labels are pushed radially outward and clamped
+   inside the canvas so they never clip at the edges. */
+const SHARED_TILT = [-0.36, 0, 0.1];
 const RING_DEFS = [
-  { r: 1.85, tilt: [-0.34, 0, 0.12], speed: 0.5, phase: 0.0 },
-  { r: 2.3, tilt: [-0.22, 0, -0.14], speed: 0.42, phase: 1.62 },
-  { r: 2.75, tilt: [0.2, 0, 0.18], speed: 0.35, phase: 3.2 },
-  { r: 3.15, tilt: [-0.28, 0, -0.06], speed: 0.3, phase: 4.75 },
+  { r: 1.7, speed: 0.5, phase: 0.0 },
+  { r: 2.15, speed: 0.42, phase: 1.62 },
+  { r: 2.6, speed: 0.35, phase: 3.2 },
+  { r: 3.0, speed: 0.3, phase: 4.75 },
 ];
 const COMPANIONS = ["INCOME", "DEBT", "HISTORY", "BEHAVIOR", "IDENTITY"];
 
@@ -100,11 +101,10 @@ function Nodes({ onPositions }) {
       const ny = ((-v.y + 1) / 2) * size.height;
       let dx = nx - cx, dy = ny - cy;
       const len = Math.hypot(dx, dy) || 1;
-      positions.push({
-        x: nx + (dx / len) * 34,
-        y: ny + (dy / len) * 34,
-        label: o.label,
-      });
+      // radial push + hard clamp: labels stay on-canvas with margin
+      const lx = Math.min(Math.max(nx + (dx / len) * 30, 44), size.width - 44);
+      const ly = Math.min(Math.max(ny + (dy / len) * 30, 26), size.height - 26);
+      positions.push({ x: lx, y: ly, label: o.label });
     });
     if (onPositions) onPositions(positions);
   });
@@ -112,7 +112,7 @@ function Nodes({ onPositions }) {
   return (
     <>
       {orbits.map((o, i) => (
-        <group key={o.label} rotation={o.tilt}>
+        <group key={o.label} rotation={SHARED_TILT}>
           {/* this dimension's own orbital disc */}
           <mesh>
             <torusGeometry args={[o.r, 0.008, 12, 160]} />
@@ -225,9 +225,9 @@ function Particles() {
 function CameraRig() {
   useFrame(({ clock, camera }) => {
     const t = clock.getElapsedTime();
-    // gentle cinematic drift around the core
-    camera.position.x = Math.sin(t * 0.12) * 0.55;
-    camera.position.y = Math.cos(t * 0.09) * 0.35;
+    // gentle cinematic drift around the core (kept small so rings stay framed)
+    camera.position.x = Math.sin(t * 0.12) * 0.28;
+    camera.position.y = Math.cos(t * 0.09) * 0.18;
     camera.lookAt(0, 0, 0);
   });
   return null;

@@ -8,3 +8,16 @@
 .sec-info { color: var(--primary); font-weight: 700; font-size: 12px; }
 .sec-unknown { color: var(--warning); font-weight: 700; font-size: 12px; }
 .sec-note { font-size: 12px; color: var(--text-muted); font-style: italic; }
+.sec-danger-btn {
+  margin-top: 12px;
+  background: #7f1d1d;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.sec-danger-btn:disabled { opacity: 0.6; cursor: default; }

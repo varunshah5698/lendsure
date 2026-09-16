@@ -116,6 +116,8 @@ export const auth = {
     api("/auth/reset-password", { method: "POST", body: JSON.stringify({ email, otp, new_password }), timeoutMs: AUTH_TIMEOUT_MS }),
   me: (token) => api("/auth/me", {}, token),
   logout: (token) => api("/auth/logout", { method: "POST" }, token),
+  sessions: (token) => api("/auth/sessions", {}, token),
+  revokeAllSessions: (token) => api("/auth/sessions/revoke-all", { method: "POST" }, token),
 };
 
 // Dashboard

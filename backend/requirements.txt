@@ -1,7 +1,9 @@
 fastapi>=0.110,<1
 uvicorn[standard]>=0.29,<1
 pydantic>=2.0,<3
-python-multipart>=0.0.9,<1
+python-multipart>=0.0.9
+# Password hashing: Argon2id (PBKDF2 fallback if absent).
+argon2-cffi>=23.1,<1
 httpx>=0.27,<1
 # ML inference (risk_model.joblib). Keep major versions bounded for reproducible deploys.
 # Without these the engines transparently fall back to rules.

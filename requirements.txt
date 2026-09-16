@@ -7,6 +7,8 @@ fastapi>=0.110
 uvicorn[standard]>=0.29
 pydantic>=2.0
 python-multipart>=0.0.9
+# Password hashing: Argon2id (PBKDF2 fallback if absent).
+argon2-cffi>=23.1
 numpy>=1.26
 pandas>=2.0
 scikit-learn>=1.3

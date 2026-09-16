@@ -365,3 +365,78 @@ def test_sendgrid_failure_falls_back_to_smtp_disabled(client, monkeypatch):
     # SMTP unconfigured + SendGrid failing: demo echo path still answers.
     assert app_module._email_configured() is True  # sendgrid key present
     assert app_module.send_email_otp("to@gmail.com", "123456", "verify") is False
+
+
+def test_argon2id_is_default_hasher(client):
+    r = client.post("/api/auth/register",
+                    json={"name": "Ar", "email": "argon@example.com", "password": "Strongpass1"})
+    assert r.status_code == 200
+    conn = app_module.db()
+    try:
+        h = conn.execute("SELECT password_hash FROM users WHERE email=?",
+                         ("argon@example.com",)).fetchone()[0]
+    finally:
+        conn.close()
+    import argon2
+    assert h.startswith("$argon2id$")
+
+
+def test_legacy_pbkdf2_upgrades_to_argon2_on_login(client):
+    import hashlib
+    salt = "00" * 16
+    dk = hashlib.pbkdf2_hmac("sha256", b"Strongpass1", bytes.fromhex(salt), 600_000).hex()
+    conn = app_module.db()
+    try:
+        conn.execute("INSERT INTO users (name, email, password_hash, email_verified, created_at)"
+                     " VALUES (?,?,?,?,?)",
+                     ("Legacy", "legacy@example.com", f"pbkdf2$600000${salt}${dk}",
+                      1, "2026-01-01T00:00:00"))
+        conn.commit()
+    finally:
+        conn.close()
+    r = client.post("/api/auth/login",
+                    json={"email": "legacy@example.com", "password": "Strongpass1"})
+    assert r.status_code == 200
+    conn = app_module.db()
+    try:
+        h = conn.execute("SELECT password_hash FROM users WHERE email=?",
+                         ("legacy@example.com",)).fetchone()[0]
+    finally:
+        conn.close()
+    assert h.startswith("$argon2id$")
+
+
+def test_password_max_length_rejects_giant_input(client):
+    r = client.post("/api/auth/register",
+                    json={"name": "G", "email": "giant@example.com", "password": "A1" + "x" * 200})
+    assert r.status_code == 400
+
+
+def test_my_sessions_and_revoke_all(client, lender):
+    r = lender.get("/api/auth/sessions")
+    assert r.status_code == 200
+    mine = r.json()["sessions"]
+    assert len(mine) >= 1 and any(s["current"] for s in mine)
+    # Simulate a second device, then revoke everything else.
+    conn = app_module.db()
+    try:
+        conn.execute("INSERT INTO sessions (token, phone, display_name, role, created_at,"
+                     " expires_at, email, last_active) VALUES (?,?,?,?,?,?,?,?)",
+                     ("tok-other", "t@example.com", "T", "lender",
+                      "2026-01-01T00:00:00", "2027-01-01T00:00:00",
+                      "t@example.com", "2026-01-01T00:00:00"))
+        conn.commit()
+    finally:
+        conn.close()
+    r = lender.post("/api/auth/sessions/revoke-all")
+    assert r.status_code == 200 and r.json()["revoked"] >= 1
+    r = lender.get("/api/auth/sessions")
+    assert all(s["current"] for s in r.json()["sessions"])
+    assert lender.get("/api/auth/me").status_code == 200
+
+
+def test_hsts_on_https_only(client):
+    r = client.get("/api/ready", headers={"x-forwarded-proto": "https"})
+    assert "Strict-Transport-Security" in r.headers
+    r = client.get("/api/ready")
+    assert "Strict-Transport-Security" not in r.headers

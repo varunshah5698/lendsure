@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { api } from "../lib/api";
+import { api, auth } from "../lib/api";
 import PageHeader from "../components/layout/PageHeader";
 import Card, { CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/Card";
 import { SkeletonCard } from "../components/ui/Skeleton";
@@ -17,10 +17,26 @@ function State({ value, good = true }) {
 
 export default function Security() {
   const [data, setData] = useState(null);
+  const [sessions, setSessions] = useState(null);
+  const [revoking, setRevoking] = useState(false);
 
   useEffect(() => {
     api("/security/status").then(setData).catch(() => setData({ error: true }));
+    auth.sessions().then(setSessions).catch(() => setSessions({ sessions: [] }));
   }, []);
+
+  const revokeAll = async () => {
+    if (!window.confirm("Sign out all other devices? This device stays signed in.")) return;
+    setRevoking(true);
+    try {
+      const r = await auth.revokeAllSessions();
+      setSessions(await auth.sessions());
+      alert(`Signed out ${r.revoked} other session${r.revoked === 1 ? "" : "s"}.`);
+    } catch (e) {
+      alert(e.message);
+    }
+    setRevoking(false);
+  };
 
   if (!data) return <div><PageHeader title="Security Center" /><SkeletonCard /></div>;
   if (data.error) {
@@ -58,9 +74,32 @@ export default function Security() {
     ]},
   ];
 
+  const sessList = sessions?.sessions || [];
+
   return (
     <div>
       <PageHeader title="Security Center" description="Real control state — ? means not implemented, never faked" />
+      <Card style={{ marginBottom: 16 }}>
+        <CardHeader><CardTitle>My sessions ({sessList.length})</CardTitle>
+          <CardDescription>Every device signed in as you — stay here, kill the rest</CardDescription></CardHeader>
+        <CardContent>
+          {sessList.length === 0 && <p className="sec-note">No sessions found.</p>}
+          {sessList.map((s, i) => (
+            <div key={i} className="sec-row">
+              <span className="sec-label">
+                {s.display_name} · {s.ip || "unknown IP"}{" "}
+                <span className="sec-info">· {s.remembered ? "remembered" : "standard"} · last active {s.last_active ? String(s.last_active).slice(0, 16).replace("T", " ") : "—"}</span>
+              </span>
+              {s.current
+                ? <span className="sec-ok">● THIS DEVICE</span>
+                : <span className="sec-info">other device</span>}
+            </div>
+          ))}
+          <button className="sec-danger-btn" onClick={revokeAll} disabled={revoking}>
+            {revoking ? "Signing out…" : "Sign out all other devices"}
+          </button>
+        </CardContent>
+      </Card>
       {groups.map((g) => (
         <Card key={g.title} style={{ marginBottom: 16 }}>
           <CardHeader><CardTitle>{g.title}</CardTitle><CardDescription>{g.desc}</CardDescription></CardHeader>

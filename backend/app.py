@@ -253,6 +253,16 @@ async def security_middleware(request: Request, call_next):
     resp.headers["Referrer-Policy"] = "same-origin"
     resp.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()"
     resp.headers["X-Frame-Options"] = "DENY"
+    # HSTS only over real HTTPS (never on local http, which has no TLS).
+    # Render/CDN terminate TLS and forward x-forwarded-proto, which counts.
+    try:
+        from urllib.parse import urlparse as _urlparse
+        _proto = (request.headers.get("x-forwarded-proto", "") or "").split(",")[0].strip()
+        _is_tls = _proto == "https" or _urlparse(str(request.url)).scheme == "https"
+    except Exception:
+        _is_tls = False
+    if _is_tls:
+        resp.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
     resp.headers["Content-Security-Policy"] = (
         "default-src 'self'; script-src 'self'; "
         "style-src 'self' https://fonts.googleapis.com; "
@@ -972,7 +982,19 @@ def send_email_otp(to_email: str, code: str, purpose: str) -> bool:
         return False
 
 
+def _argon_hasher():
+    """Argon2id hasher, or None when the optional dependency is absent."""
+    try:
+        from argon2 import PasswordHasher
+        return PasswordHasher(time_cost=2, memory_cost=65536, parallelism=2)
+    except Exception:
+        return None
+
+
 def _hash_password(password: str) -> str:
+    ph = _argon_hasher()
+    if ph is not None:
+        return ph.hash(password)
     salt = secrets.token_bytes(16)
     dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 600_000)
     return f"pbkdf2$600000${salt.hex()}${dk.hex()}"
@@ -994,6 +1016,9 @@ def _password_problem(password: str) -> str | None:
     """None when acceptable, else the human-readable reason."""
     if len(password) < 8:
         return "Password must be at least 8 characters"
+    if len(password) > 128:
+        # Memory-hard hashing (Argon2id) makes giant inputs a CPU-DoS vector.
+        return "Password must be at most 128 characters"
     if not re.search(r"[A-Za-z]", password):
         return "Password must contain at least one letter"
     if not re.search(r"[0-9]", password):
@@ -1017,6 +1042,14 @@ def _unsent_code_or_503(sent: bool, code: str) -> dict:
 
 def _check_password(password: str, stored: str) -> bool:
     try:
+        if stored.startswith("$argon2id$"):
+            from argon2 import PasswordHasher
+            from argon2.exceptions import VerifyMismatchError
+            try:
+                PasswordHasher().verify(stored, password)
+                return True
+            except VerifyMismatchError:
+                return False
         algo, iters, salt, dk = stored.split("$")
         if algo != "pbkdf2":
             return False
@@ -1024,6 +1057,12 @@ def _check_password(password: str, stored: str) -> bool:
         return secrets.compare_digest(test.hex(), dk)
     except Exception:
         return False
+
+
+def _hash_needs_upgrade(stored: str) -> bool:
+    """True for legacy PBKDF2 hashes when Argon2id is available: callers
+    re-hash transparently on the next successful password login."""
+    return stored.startswith("pbkdf2$") and _argon_hasher() is not None
 
 
 def _issue_email_otp(conn, email: str, purpose: str) -> str:
@@ -1173,6 +1212,11 @@ def email_login(payload: LoginIn, request: Request, response: Response):
     conn = db()
     try:
         _record_device(conn, email, request, verified=1)
+        if _hash_needs_upgrade(row["password_hash"]):
+            # Transparent upgrade: legacy PBKDF2 hash becomes Argon2id now
+            # that the user proved the password. No UX impact.
+            conn.execute("UPDATE users SET password_hash=? WHERE email=?",
+                         (_hash_password(payload.password), email))
         conn.commit()
     finally:
         conn.close()
@@ -1293,6 +1337,61 @@ def auth_logout(request: Request, response: Response,
     return {"ok": True}
 
 
+def _my_session_token(request: Request, authorization: Optional[str]) -> Optional[str]:
+    if authorization and authorization.startswith("Bearer "):
+        return authorization[7:].strip() or None
+    return request.cookies.get(SESSION_COOKIE)
+
+
+@app.get("/api/auth/sessions")
+def my_sessions(request: Request, authorization: Optional[str] = Header(default=None)):
+    """My active sessions for the Security Center. Full tokens never leave
+    the server — only metadata plus which row is this call."""
+    tok = _my_session_token(request, authorization)
+    s = _session_from_header(f"Bearer {tok}") if tok else None
+    if not s:
+        raise HTTPException(401, "Not signed in")
+    key_email = (s.get("email") or "").strip().lower()
+    key_phone = (s.get("phone") or "").strip()
+    conn = db()
+    try:
+        rows = conn.execute(
+            "SELECT token, display_name, role, created_at, last_active, ip, remember"
+            " FROM sessions WHERE email=? OR phone=? ORDER BY last_active DESC",
+            (key_email, key_phone)).fetchall()
+    finally:
+        conn.close()
+    return {"ok": True, "sessions": [
+        {"current": r["token"] == tok,
+         "display_name": r["display_name"], "role": r["role"],
+         "created_at": r["created_at"], "last_active": r["last_active"],
+         "ip": r["ip"], "remembered": bool(r["remember"])}
+        for r in rows]}
+
+
+@app.post("/api/auth/sessions/revoke-all")
+def revoke_all_sessions(request: Request, response: Response,
+                        authorization: Optional[str] = Header(default=None)):
+    """Sign out everywhere else: kills all my sessions except this one."""
+    tok = _my_session_token(request, authorization)
+    s = _session_from_header(f"Bearer {tok}") if tok else None
+    if not s:
+        raise HTTPException(401, "Not signed in")
+    key_email = (s.get("email") or "").strip().lower()
+    key_phone = (s.get("phone") or "").strip()
+    conn = db()
+    try:
+        cur = conn.execute("DELETE FROM sessions WHERE (email=? OR phone=?) AND token!=?",
+                           (key_email, key_phone, tok))
+        conn.commit()
+        n = cur.rowcount
+    finally:
+        conn.close()
+    _audit_event("auth_revoke_all", f"{s.get('display_name', '?')} ({key_email or key_phone})",
+                 {"revoked": n})
+    return {"ok": True, "revoked": n}
+
+
 @app.get("/api/security/status")
 def security_status():
     """Real control state — UNKNOWN means not implemented, never faked."""
@@ -1312,7 +1411,8 @@ def security_status():
                            "otp_ttl_min": OTP_TTL_MIN,
                            "email_password": "pbkdf2-sha256",
                            "email_otp": "gmail-smtp" if _smtp_configured() else "demo-mode",
-                           "passwords": "pbkdf2-sha256 (argon2id preferred when available)",
+                           "passwords": ("argon2id" if _argon_hasher() is not None
+                                           else "pbkdf2-sha256 (argon2id unavailable)"),
                            "sessions": "httponly-samesite-cookies, server-side",
                            "idle_timeout_sec": IDLE_TIMEOUT_SEC,
                            "device_otp": "first-login and new-device inbox verification",

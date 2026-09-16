@@ -276,8 +276,18 @@ def _audit_event(action: str, actor: str, detail: dict):
 # ---------------- DB ----------------
 
 def db() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH)
+    """Single choke point for connections, tuned to SQLite's safe maximum:
+    WAL journaling (readers never block writers), foreign-key enforcement,
+    and a busy timeout so concurrent requests wait instead of crashing."""
+    conn = sqlite3.connect(DB_PATH, timeout=30)
     conn.row_factory = sqlite3.Row
+    try:
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA foreign_keys=ON")
+        conn.execute("PRAGMA busy_timeout=30000")
+        conn.execute("PRAGMA synchronous=NORMAL")
+    except Exception:
+        pass
     return conn
 
 

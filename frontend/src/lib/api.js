@@ -138,6 +138,7 @@ export const borrowers = {
   financials: (id, token) => api(`/ls/borrowers/${id}/financials`, {}, token),
   analyze: (id, token) => api(`/ls/borrowers/${id}/analyze`, { method: "POST" }, token),
   analysis: (id, token) => api(`/ls/borrowers/${id}/analysis`, {}, token),
+  cashflow: (id, token) => api(`/ls/borrowers/${id}/cashflow`, {}, token),
   evidence: (id, token) => api(`/ls/borrowers/${id}/evidence`, {}, token),
   audit: (id, token) => api(`/ls/borrowers/${id}/audit`, {}, token),
 };

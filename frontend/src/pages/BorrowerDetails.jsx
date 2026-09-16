@@ -16,6 +16,8 @@ import Gauge from "../components/risk/Gauge";
 import CopyButton from "../components/ui/CopyButton";
 import { downloadJSON } from "../lib/export";
 import DecisionBadge from "../components/risk/DecisionBadge";
+import CashFlowChart from "../components/charts/CashFlowChart";
+import useCountUp from "../hooks/useCountUp";
 import NetworkTab from "../components/graph/NetworkTab";
 import AuditTimeline from "../components/audit/AuditTimeline";
 import EmptyState from "../components/ui/EmptyState";
@@ -46,6 +48,7 @@ export default function BorrowerDetails() {
   const [borrower, setBorrower] = useState(null);
   const [analysis, setAnalysis] = useState(null);
   const [financials, setFinancials] = useState([]);
+  const [cashflow, setCashflow] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [drafting, setDrafting] = useState(false);
@@ -65,6 +68,7 @@ export default function BorrowerDetails() {
       setBorrower(b);
       setFinancials(snaps);
       setAnalysis(a);
+      borrowers.cashflow(id, session.token).then(setCashflow).catch(() => setCashflow(null));
       intel.riskHistory(id, session.token).then((h) => setChanged(h.what_changed)).catch(() => {});
     } catch (e) {
       setError(e.message);
@@ -277,7 +281,7 @@ export default function BorrowerDetails() {
           </Card>
         )}
 
-        {tab === "cashflow" && <CashFlowTab financials={financials} />}
+        {tab === "cashflow" && <CashFlowTab financials={financials} cashflow={cashflow} />}
         {tab === "repayment" && <RepaymentTab borrower={borrower} fin={fin} />}
         {tab === "documents" && <DocumentsTab borrower={borrower} bid={id} token={session.token} toast={toast} guest={session?.role === "guest"} />}
         {tab === "network" && <NetworkTab bid={id} token={session.token} guest={session?.role === "guest"} />}
@@ -292,33 +296,75 @@ export default function BorrowerDetails() {
 
 /* --- Sub-tabs --- */
 
-function CashFlowTab({ financials }) {
-  if (!financials?.length) return <EmptyState title="No financial data" description="Financial snapshots are not available for this borrower." />;
-  const max = Math.max(...financials.map((s) => Math.max(s.income, s.expenses, s.debt)), 1);
-
+function CashFlowTab({ financials, cashflow }) {
+  const snaps = cashflow?.snapshots?.length ? cashflow.snapshots : financials;
+  const moneyPoints = (snaps || []).map((s) => ({
+    label: s.label || `M${s.month}`,
+    values: {
+      income: s.income || 0,
+      expenses: s.expenses || 0,
+      net: (s.income || 0) - (s.expenses || 0),
+    },
+  }));
+  const oblPoints = (cashflow?.monthly_obligations || []).map((m) => ({
+    label: m.month,
+    values: { due: m.due || 0, paid: m.paid_actual || 0 },
+  }));
+  const sum = cashflow?.summary;
+  if (!moneyPoints.length && !oblPoints.length) {
+    return <EmptyState title="No financial data" description="Financial snapshots are not available for this borrower." />;
+  }
   return (
-    <Card>
-      <CardHeader><CardTitle>Six-Month Analytics</CardTitle></CardHeader>
-      <CardContent>
-        <div className="cf-legend">
-          <span className="cf-legend-item"><span className="cf-dot" style={{ background: "var(--success)" }} />Income</span>
-          <span className="cf-legend-item"><span className="cf-dot" style={{ background: "var(--warning)" }} />Expenses</span>
-          <span className="cf-legend-item"><span className="cf-dot" style={{ background: "var(--danger)" }} />Debt</span>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {sum && <CashSummary sum={sum} />}
+      {!!moneyPoints.length && (
+        <Card>
+          <CardContent>
+            <CashFlowChart title="Money in vs out" subtitle="Monthly income, expenses and net surplus"
+              points={moneyPoints} format={(v) => inr(Math.round(v))}
+              series={[
+                { key: "income", label: "Income", color: "var(--success)" },
+                { key: "expenses", label: "Expenses", color: "var(--warning)" },
+                { key: "net", label: "Net", color: "var(--primary)" },
+              ]} />
+          </CardContent>
+        </Card>
+      )}
+      {!!oblPoints.length && (
+        <Card>
+          <CardContent>
+            <CashFlowChart title="Loan obligations" subtitle="EMI due vs actually paid per month"
+              points={oblPoints} format={(v) => inr(Math.round(v))}
+              series={[
+                { key: "due", label: "Due", color: "var(--danger)" },
+                { key: "paid", label: "Paid", color: "var(--success)" },
+              ]} />
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function CashSummary({ sum }) {
+  const net = useCountUp(sum.net || 0);
+  const paid = useCountUp(sum.total_paid_actual || 0);
+  const overdue = useCountUp(sum.overdue || 0);
+  const cards = [
+    ["Net surplus", inr(Math.round(net)), sum.net >= 0 ? "var(--success)" : "var(--danger)"],
+    ["Paid to loans", inr(Math.round(paid)), "var(--text-primary)"],
+    ["Overdue", inr(Math.round(overdue)), "var(--danger)"],
+    ["Next due", sum.next_due ? `${inr(sum.next_due.amount)} · ${sum.next_due.date}` : "—", "var(--text-primary)"],
+  ];
+  return (
+    <div className="cfc-cards">
+      {cards.map(([l, v, c]) => (
+        <div key={l} className="cfc-card">
+          <div className="cfc-card-v" style={{ color: c }}>{v}</div>
+          <div className="cfc-card-l">{l}</div>
         </div>
-        <div className="cf-chart">
-          {financials.map((s, i) => (
-            <div key={i} className="cf-col">
-              <div className="cf-bars">
-                <div className="cf-bar" style={{ height: `${(s.income / max) * 100}%`, background: "var(--success)" }} title={`Income: ${inr(s.income)}`} />
-                <div className="cf-bar" style={{ height: `${(s.expenses / max) * 100}%`, background: "var(--warning)" }} title={`Expenses: ${inr(s.expenses)}`} />
-                <div className="cf-bar" style={{ height: `${(s.debt / max) * 100}%`, background: "var(--danger)" }} title={`Debt: ${inr(s.debt)}`} />
-              </div>
-              <span className="cf-label">{s.label}</span>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+      ))}
+    </div>
   );
 }
 

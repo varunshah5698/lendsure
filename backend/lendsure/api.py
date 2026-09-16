@@ -417,6 +417,81 @@ def get_financials(bid: str, authorization: str | None = Header(default=None), x
         conn.close()
 
 
+@router.get("/borrowers/{bid}/cashflow")
+def get_cashflow(bid: str, authorization: str | None = Header(default=None), x_api_key: str | None = Header(default=None)):
+    """Per-borrower cash flow: monthly money in/out from financial snapshots
+    plus loan-obligation timeline (due vs actually paid per month) and a
+    computed summary. Powers the interactive bar/line charts."""
+    require_perm(authorization, x_api_key, "borrower.read")
+    conn = _DB()
+    try:
+        b = conn.execute("SELECT borrower_id FROM ls_borrowers WHERE borrower_id=?", (bid,)).fetchone()
+        if not b:
+            raise HTTPException(404, "Borrower not found")
+        snaps = [dict(r) for r in conn.execute(
+            "SELECT month, label, income, expenses, debt, transactions, bounced"
+            " FROM ls_financials WHERE borrower_id=? ORDER BY month", (bid,))]
+        loans = [dict(r) for r in conn.execute(
+            "SELECT id, principal, emi, status, disbursed_at FROM ls_loans WHERE borrower_id=?", (bid,))]
+        loan_ids = [l["id"] for l in loans]
+        sched = []
+        reps = []
+        if loan_ids:
+            q = ",".join("?" for _ in loan_ids)
+            sched = [dict(r) for r in conn.execute(
+                f"SELECT loan_id, n, due_date, total_due, paid, status FROM ls_schedule"
+                f" WHERE loan_id IN ({q}) ORDER BY due_date", loan_ids)]
+            reps = [dict(r) for r in conn.execute(
+                f"SELECT loan_id, amount, created_at FROM ls_repayments WHERE loan_id IN ({q})", loan_ids)]
+        # Bucket obligations + actuals by calendar month.
+        obl: dict[str, dict] = {}
+        for s in sched:
+            m = (s["due_date"] or "")[:7]
+            if len(m) != 7:
+                continue
+            o = obl.setdefault(m, {"month": m, "due": 0.0, "paid_due": 0.0, "missed": 0})
+            o["due"] += s["total_due"] or 0
+            o["paid_due"] += s["paid"] or 0
+            if (s["status"] or "") in ("MISSED", "LATE"):
+                o["missed"] += 1
+        pay: dict[str, float] = {}
+        for r in reps:
+            m = (r["created_at"] or "")[:7]
+            if len(m) == 7:
+                pay[m] = pay.get(m, 0.0) + (r["amount"] or 0)
+        months = sorted(set(obl) | set(pay))
+        monthly = [{"month": m, "due": round(obl.get(m, {}).get("due", 0.0), 2),
+                    "paid_scheduled": round(obl.get(m, {}).get("paid_due", 0.0), 2),
+                    "paid_actual": round(pay.get(m, 0.0), 2),
+                    "missed": obl.get(m, {}).get("missed", 0)} for m in months]
+        tot_in = round(sum((s.get("income") or 0) for s in snaps), 2)
+        tot_out = round(sum((s.get("expenses") or 0) for s in snaps), 2)
+        tot_due = round(sum(m["due"] for m in monthly), 2)
+        tot_paid = round(sum(m["paid_actual"] for m in monthly), 2)
+        overdue = round(sum(m["due"] - m["paid_scheduled"] for m in monthly
+                            if m["due"] > m["paid_scheduled"]), 2)
+        upcoming = [s for s in sched if (s["status"] or "") == "UPCOMING"]
+        nxt = min(upcoming, key=lambda s: s["due_date"]) if upcoming else None
+        return {
+            "borrower_id": bid,
+            "snapshots": snaps,
+            "monthly_obligations": monthly,
+            "loans": [{"id": l["id"], "principal": l["principal"], "emi": l["emi"],
+                       "status": l["status"], "disbursed_at": l["disbursed_at"]} for l in loans],
+            "summary": {
+                "total_income": tot_in, "total_expenses": tot_out,
+                "net": round(tot_in - tot_out, 2),
+                "total_due": tot_due, "total_paid_actual": tot_paid,
+                "overdue": overdue, "months_covered": len(months),
+                "next_due": ({"date": nxt["due_date"],
+                              "amount": round((nxt["total_due"] or 0) - (nxt["paid"] or 0), 2)}
+                             if nxt else None),
+            },
+        }
+    finally:
+        conn.close()
+
+
 # ---------------- analysis ----------------
 
 def _persist_analysis(conn, bid: str, res: dict, actor: str) -> int:

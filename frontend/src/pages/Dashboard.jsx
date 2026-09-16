@@ -5,6 +5,7 @@ import { useToast } from "../components/ui/Toast";
 import { dashboard, intel, inr } from "../lib/api";
 import PageHeader from "../components/layout/PageHeader";
 import MetricCard from "../components/dashboard/MetricCard";
+import Reveal from "../components/ui/Reveal";
 import Card, { CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
 import { SkeletonCard } from "../components/ui/Skeleton";
@@ -65,16 +66,17 @@ export default function Dashboard() {
       <PageHeader title={greet()} description="Lending Intelligence Overview · live from the database" />
 
       <div className="dashboard-grid">
-        <MetricCard label="Borrowers" value={data.borrowers?.toLocaleString()} sub={`${data.borrowers?.toLocaleString()}-profile portfolio`} icon="users" />
-        <MetricCard label="Low Risk" value={data.low_risk} variant="success" icon="check" />
-        <MetricCard label="Medium Risk" value={data.medium_risk} variant="warning" sub="watchlist" icon="zap" />
-        <MetricCard label="High Risk" value={data.high_risk} variant="danger" sub="needs caution" icon="flag" />
-        <MetricCard label="Potential Fraud" value={data.fraud_high} variant="danger" sub="high-severity" icon="shield" />
-        <MetricCard label="Pending Verification" value={data.pending_verification} variant="warning" sub="review queue" icon="clipboard" />
-        <MetricCard label="Avg Trust Score" value={data.avg_trust ?? "—"} icon="heart" />
-        <MetricCard label="Avg Confidence" value={data.avg_confidence != null ? `${data.avg_confidence}%` : "—"} icon="target" />
+        <MetricCard label="Borrowers" value={data.borrowers?.toLocaleString()} sub={`${data.borrowers?.toLocaleString()}-profile portfolio`} icon="users"  index={0} />
+        <MetricCard label="Low Risk" value={data.low_risk} variant="success" icon="check"  index={1} />
+        <MetricCard label="Medium Risk" value={data.medium_risk} variant="warning" sub="watchlist" icon="zap"  index={2} />
+        <MetricCard label="High Risk" value={data.high_risk} variant="danger" sub="needs caution" icon="flag"  index={3} />
+        <MetricCard label="Potential Fraud" value={data.fraud_high} variant="danger" sub="high-severity" icon="shield"  index={4} />
+        <MetricCard label="Pending Verification" value={data.pending_verification} variant="warning" sub="review queue" icon="clipboard"  index={5} />
+        <MetricCard label="Avg Trust Score" value={data.avg_trust ?? "—"} icon="heart"  index={6} />
+        <MetricCard label="Avg Confidence" value={data.avg_confidence != null ? `${data.avg_confidence}%` : "—"} icon="target"  index={7} />
       </div>
 
+      <Reveal>
       <Card>
         <CardHeader>
           <CardTitle>Early Warnings</CardTitle>
@@ -91,8 +93,10 @@ export default function Dashboard() {
           ))}
         </CardContent>
       </Card>
+      </Reveal>
 
       {portfolio && (
+        <Reveal delay={0.05}>
         <Card>
           <CardHeader>
             <CardTitle>Portfolio Intelligence</CardTitle>
@@ -112,8 +116,10 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
+        </Reveal>
       )}
 
+      <Reveal delay={0.1}>
       <Card>
         <CardHeader>
           <CardTitle>Recent Borrowers</CardTitle>
@@ -153,6 +159,7 @@ export default function Dashboard() {
           </div>
         </CardContent>
       </Card>
+      </Reveal>
     </div>
   );
 }

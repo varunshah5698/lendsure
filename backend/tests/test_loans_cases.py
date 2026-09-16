@@ -90,3 +90,41 @@ def test_read_scope_key_cannot_mutate(client, lender):
     r = lender.post("/api/ls/borrowers/B90001/analyze", json={},
                     headers={"X-API-Key": key})
     assert r.status_code == 403
+
+
+def test_cashflow_combines_snapshots_and_obligations(lender):
+    conn = app_module.db()
+    try:
+        conn.execute("INSERT INTO ls_financials (borrower_id, month, label, income, expenses, debt)"
+                     " VALUES (?,?,?,?,?,?)", ("B90001", 1, "Jan", 50000, 30000, 10000))
+        conn.execute("INSERT INTO ls_financials (borrower_id, month, label, income, expenses, debt)"
+                     " VALUES (?,?,?,?,?,?)", ("B90001", 2, "Feb", 52000, 31000, 9000))
+        conn.execute("INSERT INTO ls_loans (id, request_id, borrower_id, principal, interest_rate,"
+                     " duration_months, emi, disbursed_at, status, outstanding_principal, total_paid,"
+                     " created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                     (77, 77, "B90001", 100000, 12, 2, 5000, "2026-01-05", "ACTIVE", 90000, 5000,
+                      "2026-01-05T00:00:00"))
+        conn.execute("INSERT INTO ls_schedule (loan_id, n, due_date, principal, interest,"
+                     " total_due, paid, status) VALUES (?,?,?,?,?,?,?,?)",
+                     (77, 1, "2026-02-10", 4000, 1000, 5000, 5000, "PAID"))
+        conn.execute("INSERT INTO ls_schedule (loan_id, n, due_date, principal, interest,"
+                     " total_due, paid, status) VALUES (?,?,?,?,?,?,?,?)",
+                     (77, 2, "2026-03-10", 4000, 1000, 5000, 0, "MISSED"))
+        conn.execute("INSERT INTO ls_repayments (loan_id, amount, created_at)"
+                     " VALUES (?,?,?)", (77, 5000, "2026-02-09T10:00:00"))
+        conn.commit()
+    finally:
+        conn.close()
+    r = lender.get("/api/ls/borrowers/B90001/cashflow")
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert d["summary"]["total_income"] == 102000
+    assert d["summary"]["net"] == 102000 - 61000
+    assert d["summary"]["total_due"] == 10000
+    assert d["summary"]["total_paid_actual"] == 5000
+    assert d["summary"]["overdue"] == 5000
+    assert d["summary"]["next_due"] is None  # nothing UPCOMING
+    months = {m["month"]: m for m in d["monthly_obligations"]}
+    assert months["2026-02"]["paid_actual"] == 5000
+    assert months["2026-03"]["missed"] == 1
+    assert lender.get("/api/ls/borrowers/NOPE/cashflow").status_code == 404

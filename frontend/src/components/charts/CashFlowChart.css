@@ -1,0 +1,55 @@
+.cfc { display: flex; flex-direction: column; gap: 12px; }
+.cfc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.cfc-title { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; }
+.cfc-sub { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+
+.cfc-toggle {
+  display: flex; gap: 4px; background: var(--bg-alt);
+  border-radius: 12px; padding: 4px; position: relative;
+}
+.cfc-toggle-btn {
+  border: none; background: transparent; border-radius: 9px;
+  padding: 7px 16px; font-weight: 700; font-size: 13px;
+  color: var(--text-muted); cursor: pointer; font-family: inherit;
+  position: relative; transition: color .15s ease;
+}
+.cfc-toggle-on { background: var(--surface); color: var(--text-primary); box-shadow: var(--shadow-xs); }
+.cfc-toggle-glow { position: absolute; inset: 0; border-radius: 9px; pointer-events: none; }
+
+.cfc-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.cfc-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  border: 1.5px solid var(--border); background: var(--surface);
+  border-radius: 99px; padding: 6px 13px; font-size: 12.5px; font-weight: 700;
+  color: var(--text-primary); cursor: pointer; font-family: inherit;
+  transition: all .15s ease;
+}
+.cfc-chip:hover { transform: translateY(-1px); box-shadow: var(--shadow-xs); }
+.cfc-chip:active { transform: scale(.96); }
+.cfc-chip-off { opacity: 0.42; }
+.cfc-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+
+.cfc-stage { position: relative; }
+.cfc-svg { width: 100%; height: auto; display: block; cursor: crosshair; }
+.cfc-grid { stroke: var(--border); stroke-width: 1; stroke-dasharray: 3 5; opacity: 0.8; }
+.cfc-cross { stroke: var(--primary); stroke-width: 1.4; stroke-dasharray: 4 3; }
+.cfc-xlabel { font-size: 11px; fill: var(--text-muted); font-weight: 600; }
+
+.cfc-tip {
+  position: absolute; top: 0; transform: translateX(-50%);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; box-shadow: var(--shadow-md);
+  padding: 10px 13px; font-size: 12.5px; min-width: 170px;
+  pointer-events: none; z-index: 2; white-space: nowrap;
+}
+.cfc-tip-row { display: flex; align-items: center; gap: 6px; margin-top: 5px; color: var(--text-secondary); }
+.cfc-tip-row b { color: var(--text-primary); margin-left: auto; padding-left: 10px; }
+
+.cfc-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.cfc-card {
+  background: var(--bg-alt); border-radius: 14px; padding: 14px 15px;
+  transition: transform .16s ease, box-shadow .16s ease;
+}
+.cfc-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-xs); }
+.cfc-card-v { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+.cfc-card-l { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-top: 3px; }

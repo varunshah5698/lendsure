@@ -39,7 +39,7 @@ export default function GrievanceTrack() {
     <div style={{ minHeight: "100vh", background: "var(--bg)", padding: "32px 16px" }}>
       <div style={{ maxWidth: 640, margin: "0 auto" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-          <Logo size={34} />
+          <Link to="/" title="Back to home page" style={{ display: "inline-flex" }}><Logo size={34} /></Link>
           <div>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 19 }}>Track your complaint</div>
             <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Enter your ticket ID and mobile number.</div>

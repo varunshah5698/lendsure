@@ -439,7 +439,7 @@ function Footer() {
     <footer className="lp-footer">
       <div className="lp-footer-inner">
         <div className="lp-footer-brand">
-          <Logo size={30} />
+          <Link to="/" title="Back to top" style={{ display: "inline-flex" }}><Logo size={30} /></Link>
           <div>
             <div className="lp-footer-name">LendSure</div>
             <div className="lp-footer-tag">AI-Powered Trust & Risk Intelligence</div>

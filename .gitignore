@@ -12,6 +12,9 @@ ml_credit/data/
 # live database + local backups: never commit data or borrower PII.
 # (Seed/artifact DBs needed for deploy ship explicitly, not via this rule.)
 backend/lending.db
+backend/lending.db-wal
+backend/lending.db-shm
+backend/lending.db-journal
 backend/backups/
 
 # fairness-ablation experiment artifacts (comparison recorded in credit_v4/metadata.json)

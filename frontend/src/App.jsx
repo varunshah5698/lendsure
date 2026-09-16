@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { AuthProvider, useAuth, isGuest } from "./context/AuthContext";
 import { ToastProvider } from "./components/ui/Toast";
 import Sidebar from "./components/layout/Sidebar";
@@ -76,7 +77,13 @@ function AppLayout() {
         <Topbar searchQuery={search} onSearchChange={setSearch} />
         <div className="app-content">
           <ErrorBoundary>
-          <Routes>
+          <AnimatePresence mode="wait">
+            <motion.div key={location.pathname}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}>
+              <Routes location={location}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/borrowers" element={<Borrowers searchQuery={search} />} />
             <Route path="/borrower/:id" element={<BorrowerDetails />} />
@@ -99,6 +106,8 @@ function AppLayout() {
             <Route path="/admin/jobs" element={<RequireLender><AdminJobs /></RequireLender>} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
+            </motion.div>
+          </AnimatePresence>
           </ErrorBoundary>
         </div>
         <ScrollTop />

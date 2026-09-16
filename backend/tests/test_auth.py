@@ -101,7 +101,8 @@ def test_idle_expiry_kills_session(lender):
     assert lender.get("/api/auth/me").status_code == 200
     conn = app_module.db()
     try:
-        conn.execute("UPDATE sessions SET last_active=strftime('%Y-%m-%dT%H:%M:%f','now','-6 minutes')")
+        # Plain (non-remembered) session, e.g. phone OTP: idle kill applies.
+        conn.execute("UPDATE sessions SET remember=0, last_active=strftime('%Y-%m-%dT%H:%M:%f','now','-6 minutes')")
         conn.commit()
     finally:
         conn.close()
@@ -159,7 +160,7 @@ def test_production_no_smtp_fails_securely(client, monkeypatch):
 def test_dead_credential_yields_401_not_403(client, lender):
     conn = app_module.db()
     try:
-        conn.execute("UPDATE sessions SET last_active=strftime('%Y-%m-%dT%H:%M:%f','now','-6 minutes')")
+        conn.execute("UPDATE sessions SET remember=0, last_active=strftime('%Y-%m-%dT%H:%M:%f','now','-6 minutes')")
         conn.commit()
     finally:
         conn.close()
@@ -284,3 +285,39 @@ def test_phone_otp_fails_closed_when_sms_provider_fails(client, monkeypatch):
     r = client.post("/api/auth/request-otp", json={"phone": "9000000011"})
     assert r.status_code == 503
     assert "demo_otp" not in r.json()
+
+
+def test_remember_session_ignores_idle_timeout(client):
+    profile, token = app_module._make_session(
+        "remember@example.com", "R", "lender", 365,
+        email="remember@example.com", remember=True)
+    conn = app_module.db()
+    try:
+        conn.execute("UPDATE sessions SET last_active='2000-01-01T00:00:00' WHERE token=?",
+                     (token,))
+        conn.commit()
+    finally:
+        conn.close()
+    # Ancient activity, but remembered: still valid, unlike normal sessions.
+    assert app_module._validate_session_token(token) is not None
+
+
+def test_email_login_gets_remembered_session(client):
+    r = client.post("/api/auth/register",
+                    json={"name": "R", "email": "rem@example.com", "password": "Strongpass1"})
+    assert r.status_code == 200
+    client.post("/api/auth/verify-email",
+                json={"email": "rem@example.com", "otp": r.json()["demo_otp"]})
+    conn = app_module.db()
+    try:
+        row = conn.execute("SELECT remember FROM sessions WHERE email=?",
+                           ("rem@example.com",)).fetchone()
+    finally:
+        conn.close()
+    assert row["remember"] == 1
+
+
+def test_email_status_has_no_secrets(client):
+    r = client.get("/api/auth/email-status")
+    assert r.status_code == 200
+    assert "smtp_configured" in r.json() and "demo_otp" in r.json()

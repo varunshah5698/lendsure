@@ -327,6 +327,7 @@ LS_MIGRATIONS = [
     ("sessions.ip", "ALTER TABLE sessions ADD COLUMN ip TEXT DEFAULT ''"),
     ("sessions.ua_hash", "ALTER TABLE sessions ADD COLUMN ua_hash TEXT DEFAULT ''"),
     ("sessions.device_hash", "ALTER TABLE sessions ADD COLUMN device_hash TEXT DEFAULT ''"),
+    ("sessions.remember", "ALTER TABLE sessions ADD COLUMN remember INTEGER DEFAULT 0"),
     ("devices.table",
      "CREATE TABLE IF NOT EXISTS ls_devices (email TEXT NOT NULL, device_hash TEXT NOT NULL,"
      " verified INTEGER DEFAULT 0, first_seen TEXT NOT NULL, last_seen TEXT NOT NULL,"

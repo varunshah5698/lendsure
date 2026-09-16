@@ -603,7 +603,8 @@ def _session_from_header(authorization: Optional[str]) -> Optional[dict]:
         # Idle window is enforced here too (no touch — the middleware owns that),
         # so direct callers can never resurrect a timed-out session.
         last = s.get("last_active") or s.get("created_at")
-        if last and last < (_now() - timedelta(seconds=IDLE_TIMEOUT_SEC)).isoformat():
+        if (not s.get("remember") and last
+                and last < (_now() - timedelta(seconds=IDLE_TIMEOUT_SEC)).isoformat()):
             conn.execute("DELETE FROM sessions WHERE token=?", (token,))
             conn.commit()
             return None
@@ -663,7 +664,10 @@ def _validate_session_token(token: str | None, request: Request | None = None) -
             conn.commit()
             return None
         last = s.get("last_active") or s.get("created_at")
-        if last and last < (now - timedelta(seconds=IDLE_TIMEOUT_SEC)).isoformat():
+        # Remembered (email-signup) sessions never idle-expire: sign up once,
+        # stay signed in. Phone-OTP and guest sessions keep the idle window.
+        if (not s.get("remember") and last
+                and last < (now - timedelta(seconds=IDLE_TIMEOUT_SEC)).isoformat()):
             conn.execute("DELETE FROM sessions WHERE token=?", (token,))
             conn.commit()
             _audit_event("auth_idle_expired",
@@ -694,20 +698,22 @@ def _validate_session_token(token: str | None, request: Request | None = None) -
 
 
 def _make_session(phone: str, display_name: str, role: str, days: int, email: str = "",
-                  request: Request | None = None, device_hash: str = "") -> tuple[dict, str]:
+                  request: Request | None = None, device_hash: str = "",
+                  remember: bool = False) -> tuple[dict, str]:
     """Create a session row. Returns (public profile, raw token).
     The token is NEVER returned to browsers in a body — it travels out in
-    the HttpOnly session cookie only."""
+    the HttpOnly session cookie only. remember=True marks an email-signup
+    lender session that never idle-expires (stays signed in)."""
     token = secrets.token_urlsafe(32)
     now = _now()
     conn = db()
     try:
         conn.execute(
             "INSERT INTO sessions (token, phone, display_name, role, created_at, expires_at, email,"
-            " last_active, ip, ua_hash, device_hash) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            " last_active, ip, ua_hash, device_hash, remember) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
             (token, phone, display_name, role, now.isoformat(),
              (now + timedelta(days=days)).isoformat(), email, now.isoformat(),
-             _client_ip(request), _ua_hash(request), device_hash),
+             _client_ip(request), _ua_hash(request), device_hash, int(remember)),
         )
         conn.commit()
     finally:
@@ -751,6 +757,17 @@ def otp_config():
     from lendsure.otp import code_length, COOLDOWN_SEC, MAX_ATTEMPTS
     return {"otp_len": code_length(), "cooldown_sec": COOLDOWN_SEC,
             "ttl_min": OTP_TTL_MIN, "max_attempts": MAX_ATTEMPTS}
+
+
+@app.get("/api/auth/email-status")
+def email_status():
+    """Delivery diagnostics (no secrets): tells the UI/operator whether email
+    OTP can actually send right now, and why not if it can't."""
+    user = "".join(os.environ.get("LENDSURE_SMTP_USER", "").split())
+    return {"smtp_configured": _smtp_configured(),
+            "demo_otp": DEMO_OTP,
+            "smtp_user_set": bool(user),
+            "smtp_domain": user.split("@")[-1] if "@" in user else ""}
 
 
 @app.post("/api/auth/request-otp")
@@ -880,7 +897,9 @@ def send_email_otp(to_email: str, code: str, purpose: str) -> bool:
         msg = EmailMessage()
         msg["From"] = f"LendSure <{user}>"
         msg["To"] = to_email
-        action = "verify your email address" if purpose == "verify" else "reset your password"
+        action = ("verify your email address" if purpose == "verify"
+                  else "confirm it's you on this device" if purpose == "login"
+                  else "reset your password")
         msg["Subject"] = f"Your LendSure verification code is {code}"
         msg.set_content(
             f"Your LendSure verification code is: {code}\n\n"
@@ -1074,9 +1093,10 @@ def verify_email(payload: VerifyEmailIn, request: Request, response: Response):
         name = row["name"]
     finally:
         conn.close()
-    profile, token = _make_session(email, name, "lender", 7, email=email,
-                                   request=request, device_hash=_device_hash(request))
-    _set_session_cookie(response, request, token, 7)
+    profile, token = _make_session(email, name, "lender", 365, email=email,
+                                   request=request, device_hash=_device_hash(request),
+                                   remember=True)
+    _set_session_cookie(response, request, token, 365)
     _audit_event("auth_login", f"{name} ({email})", {"method": "email-register"})
     return {"ok": True, **profile}
 
@@ -1124,9 +1144,10 @@ def email_login(payload: LoginIn, request: Request, response: Response):
             return resp
     finally:
         conn.close()
-    profile, token = _make_session(email, row["name"], "lender", 7, email=email,
-                                   request=request, device_hash=_device_hash(request))
-    _set_session_cookie(response, request, token, 7)
+    profile, token = _make_session(email, row["name"], "lender", 365, email=email,
+                                   request=request, device_hash=_device_hash(request),
+                                   remember=True)
+    _set_session_cookie(response, request, token, 365)
     _audit_event("auth_login", f"{row['name']} ({email})", {"method": "email-password"})
     return {"ok": True, **profile}
 
@@ -1152,9 +1173,10 @@ def verify_login(payload: VerifyLoginIn, request: Request, response: Response):
         conn.commit()
     finally:
         conn.close()
-    profile, token = _make_session(email, row["name"], "lender", 7, email=email,
-                                   request=request, device_hash=_device_hash(request))
-    _set_session_cookie(response, request, token, 7)
+    profile, token = _make_session(email, row["name"], "lender", 365, email=email,
+                                   request=request, device_hash=_device_hash(request),
+                                   remember=True)
+    _set_session_cookie(response, request, token, 365)
     _audit_event("auth_login", f"{row['name']} ({email})", {"method": "email-password-new-device"})
     return {"ok": True, **profile}
 

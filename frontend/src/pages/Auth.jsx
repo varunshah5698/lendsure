@@ -264,7 +264,7 @@ export default function Auth() {
                   <Button variant="primary" className="zev-btn" onClick={handleSignIn} disabled={loading}>
                     {loading ? "Signing in…" : "Sign in →"}
                   </Button>
-                  <p className="zev-hint">New device? We’ll email you a one-time code after your password.</p>
+                  <p className="zev-hint">Stays signed in on this device — sign up once, use it forever.</p>
                 </div>
               )}
 

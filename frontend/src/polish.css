@@ -3,7 +3,7 @@
 .lp-risk-card, .lp-pipeline-stage, .lp-scenario-card, .lp-security-item {
   transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
-.card:hover, .fi-summary-card:hover, .fi-econ-card:hover, .fi-watchlist-item:hover {
+.fi-summary-card:hover, .fi-econ-card:hover, .fi-watchlist-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 28px rgba(0, 0, 0, .14);
 }
@@ -23,7 +23,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .app-content > div { animation: page-in .35s ease; }
 @media (prefers-reduced-motion: reduce) {
   .app-content > div { animation: none; }
-  .card:hover, .fi-summary-card:hover, .fi-econ-card:hover, .fi-watchlist-item:hover,
+  .fi-summary-card:hover, .fi-econ-card:hover, .fi-watchlist-item:hover,
   .bd-metric:hover, .fi-news-item:hover { transform: none; }
 }
 @media print {
@@ -33,9 +33,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 /* Premium interaction layer */
-.page-header, .topbar, .sidebar, .card, .metric-card {
-  border-color: rgba(148, 163, 184, .38);
-}
 .page-header { position: relative; }
 .page-header::after {
   content: "";
@@ -43,16 +40,17 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   left: 0;
   bottom: -10px;
   width: 44px;
-  height: 3px;
+  height: 4px;
   border-radius: 4px;
-  background: linear-gradient(90deg, var(--pv-lime), #14b8a6);
+  background: var(--pv-lime);
+  border: 1.5px solid var(--pv-ink);
 }
-.card, .metric-card, .fi-summary-card, .fi-market-card, .fi-econ-card,
+.fi-summary-card, .fi-market-card, .fi-econ-card,
 .fi-watchlist-item, .lp-risk-card, .lp-pipeline-stage, .lp-scenario-card,
 .lp-security-item {
   box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 10px 30px rgba(15,23,42,.035);
 }
-.card:hover, .metric-card:hover, .fi-summary-card:hover, .fi-econ-card:hover,
+.fi-summary-card:hover, .fi-econ-card:hover,
 .fi-watchlist-item:hover, .lp-risk-card:hover, .lp-scenario-card:hover {
   transform: translateY(-3px);
   border-color: rgba(163, 230, 53, .55);
@@ -64,7 +62,7 @@ button:not(:disabled):hover, .btn:not(:disabled):hover { transform: translateY(-
 .data-table tbody tr { transition: background .14s ease; }
 .data-table tbody tr.clickable:hover { background: rgba(163,230,53,.10); }
 @media (prefers-reduced-motion: reduce) {
-  .card:hover, .metric-card:hover, .fi-summary-card:hover, .fi-econ-card:hover,
+  .fi-summary-card:hover, .fi-econ-card:hover,
   .fi-watchlist-item:hover, .lp-risk-card:hover, .lp-scenario-card:hover,
   button:not(:disabled):hover, .btn:not(:disabled):hover { transform: none; }
 }

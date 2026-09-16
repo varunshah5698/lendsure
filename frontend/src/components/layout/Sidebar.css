@@ -3,7 +3,7 @@
   height: 100vh;
   background: linear-gradient(180deg, var(--forest-900) 0%, var(--forest-950) 100%);
   color: #cfd8c9;
-  border-right: 1px solid rgba(185, 255, 102, 0.1);
+  border-right: 2px solid #06110b;
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -20,7 +20,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 2px solid rgba(185, 255, 102, 0.14);
   min-height: 56px;
 }
 .sidebar-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; }
@@ -58,8 +58,8 @@
 .sidebar-group { margin-bottom: 10px; }
 .sidebar-group-label {
   font-size: 10px;
-  font-weight: 700;
-  color: #6f7f6f;
+  font-weight: 800;
+  color: #7d9167;
   text-transform: uppercase;
   letter-spacing: .12em;
   padding: 8px 12px 6px;
@@ -72,7 +72,7 @@
   padding: 9px 12px;
   border-radius: 11px;
   font-size: 13.5px;
-  font-weight: 500;
+  font-weight: 600;
   color: #b9c4b2;
   text-decoration: none;
   transition: all .15s ease;
@@ -87,16 +87,17 @@
 .sidebar-link:hover { background: rgba(185, 255, 102, 0.09); color: #fff; text-decoration: none; }
 .sidebar-link-active {
   background: var(--pv-lime);
-  color: #0b2e21;
+  color: var(--pv-ink);
   font-weight: 700;
-  box-shadow: 0 4px 16px rgba(185, 255, 102, 0.25);
+  border-radius: 10px;
+  box-shadow: 3px 3px 0 #04100a;
 }
 .sidebar-icon { display: inline-flex; width: 20px; justify-content: center; color: #7d8b78; flex-shrink: 0; }
 .sidebar-link:hover .sidebar-icon { color: #d6e2cf; }
-.sidebar-link-active .sidebar-icon { color: #0b2e21; }
+.sidebar-link-active .sidebar-icon { color: var(--pv-ink); }
 
 .sidebar-footer {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 2px solid rgba(185, 255, 102, 0.14);
   padding: 12px 8px;
 }
 .sidebar-user {
@@ -106,6 +107,7 @@
   padding: 8px 10px;
   margin-bottom: 6px;
   background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(185, 255, 102, 0.16);
   border-radius: 12px;
 }
 .sidebar-avatar {
@@ -113,7 +115,8 @@
   height: 32px;
   border-radius: 50%;
   background: var(--pv-lime);
-  color: #0b2e21;
+  color: var(--pv-ink);
+  border: 2px solid #04100a;
   display: grid;
   place-items: center;
   font-weight: 800;

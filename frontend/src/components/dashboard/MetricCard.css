@@ -1,16 +1,16 @@
-/* Dashboard metric card — soft modern surface. */
+/* Dashboard metric card — boxed ink border, hard offset shadow. */
 .metric-card {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 18px;
+  border: 2px solid var(--pv-ink);
+  border-radius: 14px;
   padding: 18px;
   position: relative;
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease;
+  box-shadow: var(--pv-hard);
+  transition: box-shadow .18s ease, transform .18s ease;
 }
 .metric-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  transform: translate(-1px, -1px);
+  box-shadow: 6px 6px 0 var(--pv-ink);
 }
 .metric-row {
   display: flex;
@@ -30,7 +30,7 @@
 }
 .metric-label {
   font-size: 11.5px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: .06em;
@@ -47,6 +47,7 @@
   flex-shrink: 0;
   background: var(--primary-light);
   color: var(--primary);
+  border: 1.5px solid var(--pv-ink);
 }
 .metric-success .metric-chip { background: var(--success-light); color: var(--success); }
 .metric-warning .metric-chip { background: var(--warning-light); color: var(--warning); }

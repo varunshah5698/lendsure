@@ -95,3 +95,76 @@
 @media (max-width: 720px) {
   .bp-gauges { grid-template-columns: 1fr; }
 }
+
+/* ================= Dark theme scope (Dashcom-style) ================= */
+.bp-dark {
+  --bg: #0e1320;
+  --bg-alt: #151c2e;
+  --surface: #1a2236;
+  --surface-hover: #202941;
+  --border: #2a3552;
+  --border-light: #232d47;
+  --text-primary: #eef2fa;
+  --text-secondary: #a9b4cc;
+  --text-muted: #6f7a94;
+  --primary: #b9ff66;
+  --primary-hover: #cdfd8a;
+  --primary-light: #2a3a1e;
+  --success: #34d399;
+  --success-light: rgba(52, 211, 153, 0.13);
+  --warning: #fbbf24;
+  --warning-light: rgba(251, 191, 36, 0.13);
+  --danger: #f87171;
+  --danger-light: rgba(248, 113, 113, 0.13);
+  --info: #60a5fa;
+  --info-light: rgba(96, 165, 250, 0.13);
+  --purple: #a78bfa;
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.45);
+  color-scheme: dark;
+}
+.bp-dark .bp-avatar { background: linear-gradient(135deg, #b9ff66, #14b8a6); color: #0b2e21; }
+.bp-dark .bp-pulse { background: var(--success); box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.18); }
+
+/* buttons stay legible on dark */
+.bp-dark .btn-primary { color: #0b2e21; border-color: transparent; }
+.bp-dark .btn-secondary { border-color: var(--border); }
+.bp-dark .btn-secondary:hover { background: var(--surface-hover); box-shadow: none; }
+
+/* badges: tinted glass + bright text */
+.bp-dark .badge-success { background: var(--success-light); color: #6ee7b7; }
+.bp-dark .badge-warning { background: var(--warning-light); color: #fcd34d; }
+.bp-dark .badge-danger { background: var(--danger-light); color: #fca5a5; }
+.bp-dark .tab-count { background: var(--primary-light); color: var(--primary); }
+
+/* tabs */
+.bp-dark .tab { color: var(--text-muted); }
+.bp-dark .tab:hover { color: var(--text-primary); }
+.bp-dark .tab-active { color: var(--primary); }
+
+/* links + copy affordances */
+.bp-dark .link-btn { color: #a3e635; }
+.bp-dark .bd-back-link { color: var(--text-muted); }
+
+/* form fields inside tabs (documents, simulator, notes) */
+.bp-dark input, .bp-dark select, .bp-dark textarea {
+  background: var(--bg-alt); border-color: var(--border); color: var(--text-primary);
+  color-scheme: dark;
+}
+.bp-dark input::placeholder, .bp-dark textarea::placeholder { color: var(--text-muted); }
+
+/* gauge + score legibility */
+.bp-dark .gauge-center { color: var(--text-primary); }
+.bp-dark .bp-conf-v { color: var(--text-primary); }
+
+/* skeletons while loading */
+.bp-dark .borrower-skeleton { filter: brightness(0.85); }
+
+/* print: force light so exports stay clean */
+@media print {
+  .bp-dark {
+    --bg: #ffffff; --bg-alt: #f1f5f9; --surface: #ffffff;
+    --border: #e2e8f0; --text-primary: #0f172a;
+    --text-secondary: #475569; --text-muted: #94a3b8;
+  }
+}

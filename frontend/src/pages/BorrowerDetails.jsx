@@ -104,7 +104,7 @@ export default function BorrowerDetails() {
   };
 
   if (loading) return (
-    <div>
+    <div className="bp-dark">
       <PageHeader title="Loading…" />
       <div className="borrower-skeleton"><SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard /></div>
     </div>
@@ -117,7 +117,7 @@ export default function BorrowerDetails() {
   const fin = a?.financial;
 
   return (
-    <div>
+    <div className="bp-dark">
       <div className="bd-back">
         <button className="bd-back-link" onClick={() => navigate("/borrowers")}>← All borrowers</button>
       </div>

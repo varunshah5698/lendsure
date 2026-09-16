@@ -29,50 +29,39 @@ function Core() {
   });
   return (
     <mesh ref={ref} material={mat} renderOrder={0}>
-      <icosahedronGeometry args={[1.2, 5]} />
+      <icosahedronGeometry args={[1.05, 5]} />
     </mesh>
   );
 }
 
-function Rings() {
-  const refs = useRef([]);
-  const colors = ["#818cf8", "#a5b4fc", "#c7d2fe"];
-  useFrame((_, dt) => {
-    refs.current.forEach((r, i) => {
-      if (!r) return;
-      r.rotation.z += dt * (0.12 + i * 0.06);
-      r.rotation.x += dt * (0.06 + i * 0.03);
-    });
+function CoreShell() {
+  const ref = useRef();
+  useFrame(({ clock }) => {
+    const t = clock.getElapsedTime();
+    ref.current.rotation.y -= 0.0016;
+    const s = 1.02 + Math.sin(t * 0.9 + 1) * 0.02;
+    ref.current.scale.set(s, s, s);
   });
   return (
-    <>
-      {colors.map((c, i) => (
-        <mesh key={i} ref={(el) => (refs.current[i] = el)}>
-          <torusGeometry args={[1.8 + i * 0.5, 0.014, 16, 100]} />
-          <meshStandardMaterial
-            color={c}
-            emissive={c}
-            emissiveIntensity={0.35}
-            transparent
-            opacity={0.55 - i * 0.1}
-          />
-        </mesh>
-      ))}
-    </>
+    <mesh ref={ref} renderOrder={1}>
+      <icosahedronGeometry args={[1.28, 1]} />
+      <meshBasicMaterial color="#a5b4fc" wireframe transparent opacity={0.22} />
+    </mesh>
   );
 }
 
 /* Six glowing nodes, each revolving on its OWN tilted orbital disc —
-   distinct radius, inclination, speed and phase per trust dimension
-   (Kepler-style: inner orbits run faster). Labels are HTML overlay
-   positioned from world coordinates. */
+   wide radius separation, gentle inclinations, even phasing: structured
+   orbits, never spaghetti. Inner discs run faster (Kepler-style).
+   Labels are pushed radially outward from the projected center so they
+   cannot stack on each other. */
 const ORBITS = [
-  { label: "INCOME", r: 2.3, tilt: [-0.62, 0, 0.28], speed: 0.66, phase: 0.0 },
-  { label: "DEBT", r: 2.5, tilt: [-0.28, 0, -0.38], speed: 0.54, phase: 1.1 },
-  { label: "HISTORY", r: 2.7, tilt: [0.3, 0, 0.32], speed: 0.45, phase: 2.3 },
-  { label: "FRAUD", r: 2.9, tilt: [-0.12, 0, -0.14], speed: 0.38, phase: 3.4 },
-  { label: "BEHAVIOR", r: 2.55, tilt: [0.52, 0, -0.3], speed: 0.58, phase: 4.4 },
-  { label: "IDENTITY", r: 2.85, tilt: [-0.48, 0, 0.16], speed: 0.41, phase: 5.4 },
+  { label: "INCOME", r: 2.2, tilt: [-0.34, 0, 0.16], speed: 0.5, phase: 0.0 },
+  { label: "DEBT", r: 2.38, tilt: [-0.18, 0, -0.22], speed: 0.45, phase: 1.05 },
+  { label: "HISTORY", r: 2.56, tilt: [0.2, 0, 0.2], speed: 0.4, phase: 2.1 },
+  { label: "FRAUD", r: 2.74, tilt: [-0.1, 0, -0.1], speed: 0.36, phase: 3.15 },
+  { label: "BEHAVIOR", r: 2.92, tilt: [0.32, 0, -0.2], speed: 0.32, phase: 4.2 },
+  { label: "IDENTITY", r: 3.1, tilt: [-0.26, 0, 0.1], speed: 0.29, phase: 5.25 },
 ];
 
 function Nodes({ onPositions }) {
@@ -82,6 +71,10 @@ function Nodes({ onPositions }) {
     const t = clock.getElapsedTime();
     const positions = [];
     const v = new THREE.Vector3();
+    // projected center: labels are pushed away from it radially
+    const c = new THREE.Vector3(0, 0, 0).project(camera);
+    const cx = ((c.x + 1) / 2) * size.width;
+    const cy = ((-c.y + 1) / 2) * size.height;
     refs.current.forEach((r, i) => {
       if (!r) return;
       const o = ORBITS[i];
@@ -95,9 +88,13 @@ function Nodes({ onPositions }) {
       // world position (nodes live inside their own tilted disc group)
       r.getWorldPosition(v);
       v.project(camera);
+      const nx = ((v.x + 1) / 2) * size.width;
+      const ny = ((-v.y + 1) / 2) * size.height;
+      let dx = nx - cx, dy = ny - cy;
+      const len = Math.hypot(dx, dy) || 1;
       positions.push({
-        x: ((v.x + 1) / 2) * size.width,
-        y: ((-v.y + 1) / 2) * size.height,
+        x: nx + (dx / len) * 34,
+        y: ny + (dy / len) * 34,
         label: o.label,
       });
     });
@@ -110,18 +107,18 @@ function Nodes({ onPositions }) {
         <group key={o.label} rotation={o.tilt}>
           {/* this dimension's own orbital disc */}
           <mesh>
-            <torusGeometry args={[o.r, 0.01, 12, 140]} />
+            <torusGeometry args={[o.r, 0.008, 12, 160]} />
             <meshStandardMaterial
               color="#6366f1"
               emissive="#6366f1"
-              emissiveIntensity={0.6}
+              emissiveIntensity={0.55}
               transparent
-              opacity={0.45}
+              opacity={0.32}
             />
           </mesh>
           <group ref={(el) => (refs.current[i] = el)}>
             <mesh>
-              <sphereGeometry args={[0.18, 20, 20]} />
+              <sphereGeometry args={[0.16, 20, 20]} />
               <meshStandardMaterial
                 color="#a5b4fc"
                 emissive="#6366f1"
@@ -130,7 +127,7 @@ function Nodes({ onPositions }) {
             </mesh>
             {/* small glow halo */}
             <mesh>
-              <sphereGeometry args={[0.3, 16, 16]} />
+              <sphereGeometry args={[0.27, 16, 16]} />
               <meshStandardMaterial
                 color="#818cf8"
                 emissive="#6366f1"
@@ -236,7 +233,7 @@ function SceneInner({ onPositions }) {
       <pointLight position={[-5, -3, -5]} intensity={0.5} color="#6366f1" />
       <CameraRig />
       <Core />
-      <Rings />
+      <CoreShell />
       <Nodes onPositions={onPositions} />
       <DataLines />
       <Particles />

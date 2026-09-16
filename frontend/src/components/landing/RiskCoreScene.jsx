@@ -18,9 +18,14 @@ function Core() {
       }),
     []
   );
-  useFrame((_, dt) => {
-    ref.current.rotation.y += dt * 0.25;
-    ref.current.rotation.x += dt * 0.08;
+  useFrame(({ clock }) => {
+    const t = clock.getElapsedTime();
+    ref.current.rotation.y += 0.0042;
+    ref.current.rotation.x += 0.0013;
+    // slow breathing core
+    const s = 1 + Math.sin(t * 0.9) * 0.035;
+    ref.current.scale.set(s, s, s);
+    mat.emissiveIntensity = 0.5 + Math.sin(t * 0.9) * 0.12;
   });
   return (
     <mesh ref={ref} material={mat} renderOrder={0}>
@@ -57,20 +62,21 @@ function Rings() {
   );
 }
 
-/* 6 glowing node spheres orbiting the core — ring + nodes share ONE tilted
-   group so every node tracks the visible ring path exactly (Saturn-style).
-   Labels are HTML overlay positioned from world coordinates. */
+/* Six glowing nodes, each revolving on its OWN tilted orbital disc —
+   distinct radius, inclination, speed and phase per trust dimension
+   (Kepler-style: inner orbits run faster). Labels are HTML overlay
+   positioned from world coordinates. */
+const ORBITS = [
+  { label: "INCOME", r: 2.3, tilt: [-0.62, 0, 0.28], speed: 0.66, phase: 0.0 },
+  { label: "DEBT", r: 2.5, tilt: [-0.28, 0, -0.38], speed: 0.54, phase: 1.1 },
+  { label: "HISTORY", r: 2.7, tilt: [0.3, 0, 0.32], speed: 0.45, phase: 2.3 },
+  { label: "FRAUD", r: 2.9, tilt: [-0.12, 0, -0.14], speed: 0.38, phase: 3.4 },
+  { label: "BEHAVIOR", r: 2.55, tilt: [0.52, 0, -0.3], speed: 0.58, phase: 4.4 },
+  { label: "IDENTITY", r: 2.85, tilt: [-0.48, 0, 0.16], speed: 0.41, phase: 5.4 },
+];
+
 function Nodes({ onPositions }) {
-  const labels = [
-    "INCOME",
-    "DEBT",
-    "HISTORY",
-    "FRAUD",
-    "BEHAVIOR",
-    "IDENTITY",
-  ];
   const refs = useRef([]);
-  const ORBIT_R = 2.6;
 
   useFrame(({ clock, camera, size }) => {
     const t = clock.getElapsedTime();
@@ -78,59 +84,65 @@ function Nodes({ onPositions }) {
     const v = new THREE.Vector3();
     refs.current.forEach((r, i) => {
       if (!r) return;
-      const angle = (i / labels.length) * Math.PI * 2 + t * 0.5;
-      r.position.x = Math.cos(angle) * ORBIT_R;
-      r.position.y = Math.sin(angle) * ORBIT_R;
+      const o = ORBITS[i];
+      const angle = o.phase + t * o.speed;
+      r.position.x = Math.cos(angle) * o.r;
+      r.position.y = Math.sin(angle) * o.r;
       r.position.z = 0;
-      // world position (nodes live inside the tilted group)
+      // breathing pulse so each node feels alive
+      const s = 1 + Math.sin(t * 2.4 + i * 1.3) * 0.12;
+      r.scale.set(s, s, s);
+      // world position (nodes live inside their own tilted disc group)
       r.getWorldPosition(v);
       v.project(camera);
       positions.push({
         x: ((v.x + 1) / 2) * size.width,
         y: ((-v.y + 1) / 2) * size.height,
-        label: labels[i],
+        label: o.label,
       });
     });
     if (onPositions) onPositions(positions);
   });
 
   return (
-    <group rotation={[-0.42, 0, 0]}>
-      {/* orbit path ring — same plane as the nodes */}
-      <mesh>
-        <torusGeometry args={[ORBIT_R, 0.01, 12, 140]} />
-        <meshStandardMaterial
-          color="#6366f1"
-          emissive="#6366f1"
-          emissiveIntensity={0.6}
-          transparent
-          opacity={0.5}
-        />
-      </mesh>
-      {labels.map((_, i) => (
-        <group key={i} ref={(el) => (refs.current[i] = el)}>
+    <>
+      {ORBITS.map((o, i) => (
+        <group key={o.label} rotation={o.tilt}>
+          {/* this dimension's own orbital disc */}
           <mesh>
-            <sphereGeometry args={[0.18, 20, 20]} />
+            <torusGeometry args={[o.r, 0.01, 12, 140]} />
             <meshStandardMaterial
-              color="#a5b4fc"
+              color="#6366f1"
               emissive="#6366f1"
-              emissiveIntensity={1}
-            />
-          </mesh>
-          {/* small glow halo */}
-          <mesh>
-            <sphereGeometry args={[0.3, 16, 16]} />
-            <meshStandardMaterial
-              color="#818cf8"
-              emissive="#6366f1"
-              emissiveIntensity={0.8}
+              emissiveIntensity={0.6}
               transparent
-              opacity={0.15}
+              opacity={0.45}
             />
           </mesh>
+          <group ref={(el) => (refs.current[i] = el)}>
+            <mesh>
+              <sphereGeometry args={[0.18, 20, 20]} />
+              <meshStandardMaterial
+                color="#a5b4fc"
+                emissive="#6366f1"
+                emissiveIntensity={1}
+              />
+            </mesh>
+            {/* small glow halo */}
+            <mesh>
+              <sphereGeometry args={[0.3, 16, 16]} />
+              <meshStandardMaterial
+                color="#818cf8"
+                emissive="#6366f1"
+                emissiveIntensity={0.8}
+                transparent
+                opacity={0.15}
+              />
+            </mesh>
+          </group>
         </group>
       ))}
-    </group>
+    </>
   );
 }
 
@@ -205,12 +217,24 @@ function Particles() {
   );
 }
 
+function CameraRig() {
+  useFrame(({ clock, camera }) => {
+    const t = clock.getElapsedTime();
+    // gentle cinematic drift around the core
+    camera.position.x = Math.sin(t * 0.12) * 0.55;
+    camera.position.y = Math.cos(t * 0.09) * 0.35;
+    camera.lookAt(0, 0, 0);
+  });
+  return null;
+}
+
 function SceneInner({ onPositions }) {
   return (
     <>
       <ambientLight intensity={0.35} />
       <pointLight position={[5, 5, 5]} intensity={0.9} color="#818cf8" />
       <pointLight position={[-5, -3, -5]} intensity={0.5} color="#6366f1" />
+      <CameraRig />
       <Core />
       <Rings />
       <Nodes onPositions={onPositions} />

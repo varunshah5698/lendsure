@@ -1,0 +1,45 @@
+# Base44 dev environment for LendSure.
+# Single-origin wiring: Vite dev server (port 3000) proxies /api to the
+# FastAPI backend (port 8000, internal only).  Live-reload on both sides.
+services:
+  backend:
+    image: python:3.12-slim
+    working_dir: /app/backend
+    volumes:
+      - ./backend:/app/backend
+      - backend-venv:/app/venv
+    environment:
+      - LENDSURE_ENV=development
+      - LENDSURE_DEMO_OTP=1          # demo OTP mode: codes shown on screen
+      - LENDSURE_LOG_CODES=1        # also print codes to server logs
+      - LENDSURE_CORS_ORIGINS=*     # dev only; proxy makes it same-origin anyway
+      - LENDSURE_IDLE_TIMEOUT_SEC=3600
+    env_file:
+      - /run/base44/app.env         # user-provided secrets (LLM_API_KEY, Twilio, etc.)
+    command: sh -c "python -m venv /app/venv 2>/dev/null; /app/venv/bin/pip install --no-cache-dir -r requirements.txt && /app/venv/bin/python -m uvicorn app:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/backend"
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      start_period: 60s
+      retries: 5
+
+  web:
+    image: node:20-slim
+    working_dir: /app/frontend
+    volumes:
+      - ./frontend:/app/frontend
+      - frontend-node-modules:/app/frontend/node_modules
+    ports:
+      - "3000:5173"
+    environment:
+      - API_PROXY_TARGET=http://backend:8000
+      - __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS
+    command: sh -c "npm install --no-audit --no-fund && npx vite --host 0.0.0.0 --port 5173"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  backend-venv:
+  frontend-node-modules:

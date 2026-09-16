@@ -1,16 +1,18 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
-  // Render flow: FastAPI serves the built files from /static/ (backend/static).
-  // The Docker image rebuilds the frontend with --outDir /app-static.
-  base: "/static/",
+  // Dev mode serves at "/" (BrowserRouter expects root).  Production build
+  // keeps "/static/" so FastAPI can serve it from backend/static.
+  base: mode === "development" ? "/" : "/static/",
   server: {
     port: 5173,
+    host: true,
+    allowedHosts: true,
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:8000",
+        target: process.env.API_PROXY_TARGET || "http://127.0.0.1:8000",
         changeOrigin: true,
       },
     },
@@ -19,4 +21,4 @@ export default defineConfig({
     outDir: "../backend/static",
     emptyOutDir: true,
   },
-});
+}));

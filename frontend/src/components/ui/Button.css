@@ -1,35 +1,51 @@
+/* Neobrutal buttons — lime primary, boxed secondary, hard shadows. */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  border: 1px solid transparent;
-  border-radius: var(--radius);
+  border: 2px solid var(--pv-ink);
+  border-radius: 11px;
   font-family: var(--font);
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: all .15s ease;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
   white-space: nowrap;
   line-height: 1;
   text-decoration: none;
 }
-.btn:disabled { opacity: .5; cursor: not-allowed; pointer-events: none; }
-.btn:active:not(:disabled) { transform: scale(.98); }
+.btn:disabled { opacity: .45; cursor: not-allowed; pointer-events: none; }
+.btn:active:not(:disabled) { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--pv-ink); }
 
 /* Variants */
-.btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
-.btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
-.btn-secondary { background: var(--surface); color: var(--text-primary); border-color: var(--pv-ink, #191a23); }
-.btn-secondary:hover { background: var(--surface-hover); box-shadow: 3px 3px 0 #191a23; }
-.btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
-.btn-danger:hover { background: #dc2626; border-color: #dc2626; }
-.btn-ghost { background: transparent; color: var(--text-secondary); border-color: transparent; }
-.btn-ghost:hover { background: var(--bg-alt); color: var(--text-primary); }
-.btn-link { background: transparent; color: var(--info); border-color: transparent; padding: 0; }
+.btn-primary {
+  background: var(--pv-lime);
+  color: var(--pv-ink);
+  border-color: var(--pv-ink);
+  box-shadow: 3px 3px 0 var(--pv-ink);
+}
+.btn-primary:hover { background: #cdfd8f; transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--pv-ink); }
+.btn-secondary {
+  background: var(--surface);
+  color: var(--pv-ink);
+  border-color: var(--pv-ink);
+  box-shadow: 3px 3px 0 var(--pv-ink);
+}
+.btn-secondary:hover { background: var(--surface-hover); transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--pv-ink); }
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--pv-ink);
+  box-shadow: 3px 3px 0 var(--pv-ink);
+}
+.btn-danger:hover { background: #dc2626; transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--pv-ink); }
+.btn-ghost { background: transparent; color: var(--text-secondary); border-color: transparent; box-shadow: none; }
+.btn-ghost:hover { background: var(--bg-alt); color: var(--pv-ink); box-shadow: none; }
+.btn-link { background: transparent; color: var(--info); border-color: transparent; padding: 0; box-shadow: none; }
 .btn-link:hover { text-decoration: underline; }
 
 /* Sizes */
-.btn-sm { padding: 6px 12px; font-size: 12.5px; border-radius: var(--radius-sm); }
-.btn-md { padding: 8px 16px; font-size: 13.5px; }
-.btn-lg { padding: 10px 20px; font-size: 14.5px; }
+.btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 9px; }
+.btn-md { padding: 9px 16px; font-size: 13.5px; }
+.btn-lg { padding: 11px 20px; font-size: 14.5px; }
 .btn-full { width: 100%; }

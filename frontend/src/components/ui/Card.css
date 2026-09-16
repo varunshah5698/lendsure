@@ -1,14 +1,14 @@
+/* Neobrutal ledger card — ink border, hard offset shadow. */
 .card {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease;
+  border: 2px solid var(--pv-ink);
+  border-radius: 16px;
+  box-shadow: var(--pv-hard);
+  transition: box-shadow .18s ease, transform .18s ease;
 }
 .card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: #cdd6bf;
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--pv-ink);
 }
 .card-none { padding: 0; }
 .card-sm { padding: 16px; }

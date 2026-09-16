@@ -1070,7 +1070,10 @@ class ResetIn(BaseModel):
 
 
 @app.post("/api/auth/register")
-def register(payload: RegisterIn):
+def register(payload: RegisterIn, request: Request):
+    """Password-only signup: Gmail + password saves the account (verified).
+    No session is created here — the user signs in on the Sign in tab,
+    where the password is checked. No OTP anywhere."""
     email = payload.email.strip().lower()
     name = payload.name.strip() or email.split("@")[0]
     if not EMAIL_RE.match(email):
@@ -1085,26 +1088,17 @@ def register(payload: RegisterIn):
     conn = db()
     try:
         if conn.execute("SELECT 1 FROM users WHERE email=?", (email,)).fetchone():
-            # Neutral response: identical shape whether or not the account
-            # exists, so registration never confirms an address. (In demo
-            # mode the echo below is absent here by design.)
-            return {"ok": True, "email": email, "email_sent": False,
-                    "message": "If the account is eligible, check your inbox for further instructions."}
+            raise HTTPException(400, "Account already exists — just sign in.")
         conn.execute(
             "INSERT INTO users (name, email, password_hash, email_verified, created_at, phone) VALUES (?,?,?,?,?,?)",
-            (name, email, _hash_password(payload.password), 0, _now().isoformat(), phone))
-        code = _issue_email_otp(conn, email, "verify")
+            (name, email, _hash_password(payload.password), 1, _now().isoformat(), phone))
+        _record_device(conn, email, request, verified=1)
+        conn.commit()
     finally:
         conn.close()
-    sent = send_email_otp(email, code, "verify")
-    from lendsure.otp import code_length as _otp_len_cfg
-    resp: dict[str, Any] = {
-        "ok": True, "email": email, "email_sent": sent,
-        "message": "If the account is eligible, check your inbox for further instructions.",
-        "otp_len": _otp_len_cfg(),
-        **_unsent_code_or_503(sent, code),
-    }
-    return resp
+    _audit_event("auth_register", f"{name} ({email})", {})
+    return {"ok": True, "email": email,
+            "message": "Account created — sign in with your email and password."}
 
 
 @app.post("/api/auth/resend-code")
@@ -1160,8 +1154,8 @@ def verify_email(payload: VerifyEmailIn, request: Request, response: Response):
 
 @app.post("/api/auth/login")
 def email_login(payload: LoginIn, request: Request, response: Response):
-    """Email + Password. OTP is demanded ONLY on a new/unverified device —
-    verified devices (and post-logout return visits) sign straight in."""
+    """Email + Password only. Matching credentials sign straight in on any
+    device with a remembered (never-expiring) session. No OTP anywhere."""
     email = payload.email.strip().lower()
     _, locked_until = _login_lock_get(email)
     if locked_until > time.time():
@@ -1175,30 +1169,11 @@ def email_login(payload: LoginIn, request: Request, response: Response):
     if not row or not _check_password(payload.password, row["password_hash"]):
         _login_lock_fail(email)
         raise HTTPException(401, "Incorrect email or password")
-    if not row["email_verified"]:
-        raise HTTPException(403, "Email not verified yet. Enter the code sent to your inbox.")
     _login_lock_clear(email)
     conn = db()
     try:
-        if not _device_verified(conn, email, request):
-            # New device (or wiped by a security event): prove the inbox once.
-            recent = conn.execute(
-                "SELECT created_at FROM email_otps WHERE email=? AND purpose='login'"
-                " ORDER BY id DESC LIMIT 1", (email,)).fetchone()
-            if recent and recent["created_at"] > (_now() - timedelta(seconds=60)).isoformat():
-                raise HTTPException(429, "A code was just sent — check your inbox (or wait a minute to resend).")
-            code = _issue_email_otp(conn, email, "login")
-            conn.commit()
-            sent = send_email_otp(email, code, "verify")
-            from lendsure.otp import code_length as _otp_len_cfg2
-            resp: dict[str, Any] = {
-                "ok": True, "otp_required": True, "email": email, "email_sent": sent,
-                "message": "New device — enter the verification code sent to your email.",
-                "otp_len": _otp_len_cfg2(),
-                **_unsent_code_or_503(sent, code),
-            }
-            _audit_event("auth_otp_challenge", f"{row['name']} ({email})", {"reason": "new-device"})
-            return resp
+        _record_device(conn, email, request, verified=1)
+        conn.commit()
     finally:
         conn.close()
     profile, token = _make_session(email, row["name"], "lender", 365, email=email,

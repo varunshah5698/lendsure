@@ -63,9 +63,10 @@ def lender(_db):
         r = c.post("/api/auth/register",
                    json={"name": "T", "email": "t@example.com", "password": "Strongpass1"})
         assert r.status_code == 200, r.text
-        otp = r.json()["demo_otp"]
-        r = c.post("/api/auth/verify-email", json={"email": "t@example.com", "otp": otp})
+        r = c.post("/api/auth/login",
+                   json={"email": "t@example.com", "password": "Strongpass1"})
         assert r.status_code == 200, r.text
+        assert r.json()["role"] == "lender"
         yield c
 
 

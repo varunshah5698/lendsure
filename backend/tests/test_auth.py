@@ -16,13 +16,22 @@ def _otp_for(client, email, purpose="verify"):
 
 
 def test_register_then_login_flow(client):
+    # Password-only: signup saves (no session), signin checks + opens.
     r = client.post("/api/auth/register",
                     json={"name": "A", "email": "a@example.com", "password": "Strongpass1"})
     assert r.status_code == 200
-    assert "demo_otp" in r.json()
-    r = client.post("/api/auth/verify-email",
-                    json={"email": "a@example.com", "otp": r.json()["demo_otp"]})
+    assert "lendsure_session" not in r.headers.get("set-cookie", "")
+    assert client.get("/api/auth/me").status_code == 401
+    # Wrong password is rejected with an error.
+    r = client.post("/api/auth/login",
+                    json={"email": "a@example.com", "password": "Wrongpass1"})
+    assert r.status_code == 401
+    assert "incorrect" in r.json()["detail"].lower()
+    # Right password opens everything, remembered.
+    r = client.post("/api/auth/login",
+                    json={"email": "a@example.com", "password": "Strongpass1"})
     assert r.status_code == 200
+    assert r.json()["role"] == "lender"
     assert "token" not in r.json()  # cookie-only: no credential in body
     assert "lendsure_session" in r.headers.get("set-cookie", "")
     assert "HttpOnly" in r.headers.get("set-cookie", "")
@@ -30,14 +39,13 @@ def test_register_then_login_flow(client):
     assert r.status_code == 200 and r.json()["role"] == "lender"
 
 
-def test_register_duplicate_is_neutral(client):
+def test_register_duplicate_signals_signin(client):
     client.post("/api/auth/register",
-                json={"name": "A", "email": "dup@example.com", "password": "Strongpass1"})
+                json={"name": "A", "email": "dup@example.com", "password": "Strongpass2"})
     r = client.post("/api/auth/register",
                     json={"name": "B", "email": "dup@example.com", "password": "Strongpass2"})
-    assert r.status_code == 200
-    assert "demo_otp" not in r.json()
-    assert "eligible" in r.json()["message"]
+    assert r.status_code == 400
+    assert "sign in" in r.json()["detail"].lower()
 
 
 def test_weak_passwords_rejected(client):
@@ -57,22 +65,15 @@ def test_wrong_password_locks_out(client, lender):
     assert r.status_code == 429
 
 
-def test_new_device_demands_otp_then_verified(client, lender):
-    ua = {"User-Agent": "BrandNewDevice/1.0"}
-    r = client.post("/api/auth/login",
-                    json={"email": "t@example.com", "password": "Strongpass1"},
-                    headers=ua)
-    assert r.status_code == 200
-    assert r.json().get("otp_required") is True
-    otp = _otp_for(client, "t@example.com", "login")
-    r = client.post("/api/auth/verify-login",
-                    json={"email": "t@example.com", "otp": otp}, headers=ua)
-    assert r.status_code == 200
-    # same device now trusted: plain password login works
-    r = client.post("/api/auth/login",
-                    json={"email": "t@example.com", "password": "Strongpass1"},
-                    headers=ua)
-    assert r.json().get("otp_required") is None
+def test_new_device_signs_straight_in(client, lender):
+    # No OTP anywhere now: password match signs in on any device.
+    for ua in ({"User-Agent": "BrandNewDevice/1.0"}, {"User-Agent": "OtherDevice/2.0"}):
+        r = client.post("/api/auth/login",
+                        json={"email": "t@example.com", "password": "Strongpass1"},
+                        headers=ua)
+        assert r.status_code == 200
+        assert r.json()["role"] == "lender"
+        assert r.json().get("otp_required") is None
 
 
 def test_otp_attempts_burn_code(client):
@@ -87,16 +88,13 @@ def test_otp_attempts_burn_code(client):
     assert "expired" in r.json()["detail"] or "new OTP" in r.json()["detail"]
 
 
-def test_login_otp_resend_cooldown(client, lender):
-    ua = {"User-Agent": "CooldownProbe/1.0"}
-    r1 = client.post("/api/auth/login",
-                     json={"email": "t@example.com", "password": "Strongpass1"},
-                     headers=ua)
-    assert r1.json().get("otp_required") is True
-    r2 = client.post("/api/auth/login",
-                     json={"email": "t@example.com", "password": "Strongpass1"},
-                     headers=ua)
-    assert r2.status_code == 429
+def test_repeat_password_logins_always_work(client, lender):
+    for _ in range(3):
+        r = client.post("/api/auth/login",
+                        json={"email": "t@example.com", "password": "Strongpass1"},
+                        headers={"User-Agent": "RepeatDevice/1.0"})
+        assert r.status_code == 200
+        assert r.json().get("otp_required") is None
 
 
 def test_idle_expiry_kills_session(lender):
@@ -150,13 +148,17 @@ def test_csrf_form_post_rejected(client):
     assert r.status_code == 403
 
 
-def test_production_no_smtp_fails_securely(client, monkeypatch):
+def test_production_no_smtp_register_still_works(client, monkeypatch):
     import app as app_module
     monkeypatch.setattr(app_module, "DEMO_OTP", False)
+    # Password-only signup needs no email delivery at all.
     r = client.post("/api/auth/register",
                     json={"name": "P", "email": "prod@example.com", "password": "Strongpass1"})
-    assert r.status_code == 503
+    assert r.status_code == 200
     assert "demo_otp" not in r.json()
+    r = client.post("/api/auth/login",
+                    json={"email": "prod@example.com", "password": "Strongpass1"})
+    assert r.status_code == 200
 
 
 def test_dead_credential_yields_401_not_403(client, lender):
@@ -308,8 +310,9 @@ def test_email_login_gets_remembered_session(client):
     r = client.post("/api/auth/register",
                     json={"name": "R", "email": "rem@example.com", "password": "Strongpass1"})
     assert r.status_code == 200
-    client.post("/api/auth/verify-email",
-                json={"email": "rem@example.com", "otp": r.json()["demo_otp"]})
+    r = client.post("/api/auth/login",
+                    json={"email": "rem@example.com", "password": "Strongpass1"})
+    assert r.status_code == 200
     conn = app_module.db()
     try:
         row = conn.execute("SELECT remember FROM sessions WHERE email=?",

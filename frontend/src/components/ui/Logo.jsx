@@ -1,50 +1,49 @@
 /**
- * LendSure mark — "Momentum" edition. A complete break from the old shields:
- * a deep-forest coin ringed in lime, three ascending growth bars forming an
- * abstract L, and a pulse-arrow tearing upward through them — money in
- * motion, decisions with momentum. One SVG, favicon to billboard.
+ * LendSure mark — "Rupee Bold" edition. An unmistakable geometric rupee:
+ * wide twin bars, full stem, deep bowl — with a growth-badge arrow riding
+ * the ring. Lime gradients on deep forest. One SVG, favicon to billboard.
  */
 export default function Logo({ size = 34 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" role="img" aria-label="LendSure logo"
       style={{ flexShrink: 0, filter: "drop-shadow(0 3px 8px rgba(10,56,38,.35))" }}>
       <defs>
-        <radialGradient id="lsDisc" cx="0.38" cy="0.34" r="0.9">
-          <stop offset="0" stopColor="#1a5c40" />
+        <radialGradient id="lsD4" cx="0.38" cy="0.32" r="0.95">
+          <stop offset="0" stopColor="#1e6845" />
           <stop offset="0.6" stopColor="#0b2e21" />
           <stop offset="1" stopColor="#050f0b" />
         </radialGradient>
-        <linearGradient id="lsRing2" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#eaffb0" />
+        <linearGradient id="lsR4" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#f0ffb8" />
           <stop offset="0.5" stopColor="#a3e635" />
           <stop offset="1" stopColor="#14b8a6" />
         </linearGradient>
-        <linearGradient id="lsBar" x1="0" y1="1" x2="0" y2="0">
-          <stop offset="0" stopColor="#15803d" />
-          <stop offset="1" stopColor="#bef264" />
+        <linearGradient id="lsG4" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#f4ffd6" />
+          <stop offset="0.55" stopColor="#bef264" />
+          <stop offset="1" stopColor="#34d399" />
         </linearGradient>
       </defs>
 
       {/* coin */}
-      <circle cx="32" cy="32" r="29" fill="url(#lsDisc)" />
-      <circle cx="32" cy="32" r="29" fill="none" stroke="url(#lsRing2)"
-        strokeWidth="3.6" />
-      <circle cx="32" cy="32" r="23.5" fill="none" stroke="#a3e635"
-        strokeOpacity="0.22" strokeWidth="1.2" strokeDasharray="2 5" />
+      <circle cx="30" cy="34" r="27" fill="url(#lsD4)" />
+      <circle cx="30" cy="34" r="27" fill="none" stroke="url(#lsR4)"
+        strokeWidth="3.4" />
 
-      {/* ascending bars → abstract L */}
-      <rect x="19" y="36" width="6.5" height="11" rx="2.4" fill="url(#lsBar)" />
-      <rect x="28.2" y="29" width="6.5" height="18" rx="2.4" fill="url(#lsBar)" />
-      <rect x="37.4" y="21" width="6.5" height="26" rx="2.4" fill="url(#lsBar)" />
+      {/* classic geometric rupee */}
+      <rect x="12" y="17" width="29" height="6.4" rx="3.2" fill="url(#lsG4)" />
+      <rect x="12" y="26.6" width="22" height="5.4" rx="2.7" fill="url(#lsG4)" />
+      <rect x="12" y="17" width="6.4" height="30" rx="3.2" fill="url(#lsG4)" />
+      <path d="M18.4 26.6 C30 26.6 36 31 36 36.2 C36 41.4 30 44.2 23.5 44.8"
+        fill="none" stroke="url(#lsG4)" strokeWidth="5.4"
+        strokeLinecap="round" />
 
-      {/* pulse arrow tearing up through the bars */}
-      <polyline points="13,42 25,32 31,35.5 47,17" fill="none"
-        stroke="#eaffb0" strokeWidth="3.4" strokeLinecap="round"
+      {/* growth badge */}
+      <circle cx="49" cy="14.5" r="9" fill="#0b2e21" stroke="url(#lsR4)"
+        strokeWidth="2.6" />
+      <path d="M49 18.8 V10.4 M45.4 14 L49 10.4 L52.6 14" fill="none"
+        stroke="#d4ff4f" strokeWidth="2.8" strokeLinecap="round"
         strokeLinejoin="round" />
-      <polygon points="47,12.5 52.5,20 43.5,20.5" fill="#eaffb0" />
-
-      {/* momentum dot */}
-      <circle cx="46" cy="46" r="3.2" fill="#a3e635" />
     </svg>
   );
 }

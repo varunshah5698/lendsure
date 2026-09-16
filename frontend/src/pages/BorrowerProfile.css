@@ -1,0 +1,96 @@
+/* Borrower profile — Dashcom-style rail + panels. Airy, labeled, professional. */
+
+.bp-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+  align-items: start;
+}
+
+/* ---------- left rail ---------- */
+.bp-rail {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 22px 20px;
+  box-shadow: var(--shadow-xs);
+  position: sticky;
+  top: 16px;
+}
+.bp-idrow { display: flex; gap: 14px; align-items: center; }
+.bp-avatar {
+  width: 62px; height: 62px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), #06b6d4);
+  color: #fff; font-weight: 800; font-size: 21px;
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.bp-name { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.2; }
+.bp-role { font-size: 12.5px; color: var(--primary); font-weight: 600; margin-top: 3px; text-transform: capitalize; }
+.bp-idline {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 14px; padding: 8px 11px;
+  background: var(--bg-alt); border-radius: 10px;
+  font-family: ui-monospace, monospace; font-size: 12.5px; font-weight: 700;
+  color: var(--text-secondary);
+}
+.bp-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.bp-sect {
+  font-size: 10.5px; font-weight: 800; letter-spacing: 0.09em;
+  color: var(--text-muted); margin: 20px 0 4px;
+}
+.bp-contact { margin: 0; }
+.bp-contact > div {
+  padding: 9px 0; border-bottom: 1px solid var(--border);
+}
+.bp-contact > div:last-child { border-bottom: none; }
+.bp-contact dt { font-size: 10px; font-weight: 800; letter-spacing: 0.08em; color: var(--text-muted); }
+.bp-contact dd { margin: 3px 0 0; font-size: 13.5px; font-weight: 600; word-break: break-word; }
+.bp-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+.bp-stats > div { background: var(--bg-alt); border-radius: 12px; padding: 11px 12px; }
+.bp-stats small { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; color: var(--text-muted); text-transform: uppercase; }
+.bp-stats b { font-size: 16px; font-weight: 800; letter-spacing: -0.01em; }
+.bp-activity {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 16px; font-size: 12.5px; font-weight: 600; color: var(--text-secondary);
+}
+.bp-pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 4px color-mix(in srgb, var(--success) 18%, transparent); flex-shrink: 0; }
+
+/* ---------- right column ---------- */
+.bp-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.bp-gauges { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.bp-panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); padding: 18px;
+  box-shadow: var(--shadow-xs); text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.bp-panel > small { font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; color: var(--text-muted); }
+.bp-conf-v { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
+.bp-conf-bar { width: 100%; height: 8px; border-radius: 99px; background: var(--bg-alt); overflow: hidden; }
+.bp-conf-fill { height: 100%; border-radius: 99px; background: var(--info); transition: width .6s ease; }
+.bp-conf-sub { font-size: 12px; color: var(--text-muted); }
+
+/* ---------- toolbar ---------- */
+.bp-toolbar {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); padding: 12px 14px;
+  margin-bottom: 16px; box-shadow: var(--shadow-xs);
+}
+
+/* ---------- overview grid ---------- */
+.bp-ov-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; }
+.bp-ratio { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.bp-ratio:last-child { border-bottom: none; }
+.bp-ratio span { color: var(--text-muted); }
+.bp-ratio b { font-weight: 800; }
+
+@media (max-width: 1024px) {
+  .bp-layout { grid-template-columns: 1fr; }
+  .bp-rail { position: static; }
+  .bp-ov-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .bp-gauges { grid-template-columns: 1fr; }
+}

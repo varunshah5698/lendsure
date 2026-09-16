@@ -25,6 +25,7 @@ import Icon from "../components/ui/Icon";
 import ErrorState from "../components/ui/ErrorState";
 import { SkeletonCard } from "../components/ui/Skeleton";
 import "./BorrowerDetails.css";
+import "./BorrowerProfile.css";
 
 const TABS = [
   { key: "overview", label: "Overview" },
@@ -121,84 +122,112 @@ export default function BorrowerDetails() {
         <button className="bd-back-link" onClick={() => navigate("/borrowers")}>← All borrowers</button>
       </div>
 
-      <div className="bd-header">
-        <div className="bd-avatar">
-          {(borrower.name || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
-        </div>
-        <div className="bd-info">
-          <h1 className="bd-name">{borrower.name} <span className="bd-id">{borrower.borrower_id}</span> <CopyButton text={borrower.borrower_id} label="ID" /></h1>
-          <div className="bd-meta">
-            <span className="bd-meta-item"><Icon name="pin" size={13} /> {borrower.city}</span>
-            <span className="bd-meta-item"><Icon name="briefcase" size={13} /> <b>{borrower.employment_type}</b> · {borrower.employment_years}y</span>
-            <span className="bd-meta-item"><Icon name="clock" size={13} /> Account {borrower.account_age_months} mo</span>
-            <Badge variant={borrower.verification_bucket}>{(borrower.verification_bucket || "").replace(/_/g, " ")}</Badge>
+      <div className="bp-layout">
+        <aside className="bp-rail">
+          <div className="bp-idrow">
+            <div className="bp-avatar">
+              {(borrower.name || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+            </div>
+            <div>
+              <div className="bp-name">{borrower.name}</div>
+              <div className="bp-role">{borrower.employment_type || "Borrower"} · {borrower.city}</div>
+            </div>
           </div>
-        </div>
-        <div className="bd-actions">
-          <Button variant="secondary" size="sm" onClick={toggleEvidence}><Icon name="file-text" size={14} /> Evidence</Button>
-          <Button variant="secondary" size="sm" onClick={() => {
-            downloadJSON(`${id}-analysis.json`, { borrower, analysis, financials });
-            toast.success("Analysis exported");
-          }}><Icon name="download" size={14} /> Export</Button>
-          <Button variant="secondary" size="sm" onClick={() => window.print()}><Icon name="printer" size={14} /> Print</Button>
-          <Button variant="secondary" size="sm" onClick={async () => {
-            const url = window.location.href;
-            try {
-              if (navigator.share) await navigator.share({ title: borrower.name, url });
-              else { await navigator.clipboard.writeText(url); toast.success("Link copied"); }
-            } catch { /* dismissed */ }
-          }}>↗ Share</Button>
-          <Button variant="primary" size="sm" onClick={reRun} disabled={session?.role === "guest"} title={session?.role === "guest" ? "Sign in with Phone OTP for lender actions" : "Re-run analysis"}>↻ Re-run</Button>
-          <Button variant="primary" size="sm" disabled={drafting} onClick={async () => {
-            if (session?.role === "guest") return toast.error("Guests are read-only — sign in with Phone OTP for lender actions");
-            if (drafting) return;
-            setDrafting(true);
-            try {
-              const { loans } = await import("../lib/api");
-              const r = await loans.createRequest({
-                borrower_id: id, amount: borrower.requested_amount || 50000,
-                interest_rate: 12, duration_months: borrower.tenure_months || 12,
-                purpose: borrower.purpose || "",
-              }, session.token);
-              toast.success(r.duplicate ? "Draft already exists — opening it" : "Loan request drafted");
-              navigate(`/loan-requests/${r.id}`);
-            } catch (e) { toast.error("Request failed: " + e.message); }
-            finally { setDrafting(false); }
-          }}>{drafting ? "Drafting…" : "＋ New loan request"}</Button>
+          <div className="bp-idline">
+            <Icon name="idcard" size={14} />
+            <span>{borrower.borrower_id}</span>
+            <CopyButton text={borrower.borrower_id} label="ID" />
+          </div>
+          <div className="bp-badges">
+            <Badge variant={borrower.verification_bucket}>{(borrower.verification_bucket || "").replace(/_/g, " ")}</Badge>
+            {r?.decision && <DecisionBadge decision={r.decision} />}
+          </div>
+
+          <div className="bp-sect">Contact</div>
+          <dl className="bp-contact">
+            {borrower.phone && <div><dt>Phone</dt><dd>{borrower.phone}</dd></div>}
+            {borrower.email && <div><dt>Email</dt><dd>{borrower.email}</dd></div>}
+            <div><dt>Location</dt><dd>{[borrower.city, borrower.address_line].filter(Boolean).join(" · ") || "—"}</dd></div>
+            <div><dt>Occupation</dt><dd style={{ textTransform: "capitalize" }}>{borrower.employment_type || "—"}{borrower.employment_years ? ` · ${borrower.employment_years}y` : ""}</dd></div>
+            <div><dt>Account age</dt><dd>{borrower.account_age_months != null ? `${borrower.account_age_months} months` : "—"}</dd></div>
+          </dl>
+
+          <div className="bp-sect">Loan ask</div>
+          <div className="bp-stats">
+            <div><small>Requested</small><b>{borrower.requested_amount != null ? inr(borrower.requested_amount) : "—"}</b></div>
+            <div><small>Tenure</small><b>{borrower.tenure_months != null ? `${borrower.tenure_months} mo` : "—"}</b></div>
+          </div>
+
+          <div className="bp-activity">
+            <span className="bp-pulse" />
+            {(borrower.verification_bucket || "").replace(/_/g, " ") || "On record"} · {borrower.account_age_months || 0} mo history
+          </div>
+        </aside>
+
+        <div className="bp-main">
+          {a && (
+            <TrustScoreHero
+              score={a.trust_score}
+              confidence={r?.confidence}
+              factors={[...(a.factors || [])].sort((x, y) => Math.abs(y.weight ?? y.score ?? 0) - Math.abs(x.weight ?? x.score ?? 0))}
+              analysisId={a.id}
+            />
+          )}
+          {a && (
+            <div className="bp-gauges">
+              <div className="bp-panel">
+                <small>Repayment risk</small>
+                <Gauge label="REPAYMENT RISK" value={a.risk_score} display={a.risk_level}
+                  color={a.risk_level === "LOW" ? "var(--success)" : a.risk_level === "MEDIUM" ? "var(--warning)" : "var(--danger)"} />
+              </div>
+              <div className="bp-panel">
+                <small>Fraud risk</small>
+                <Gauge label="FRAUD RISK" value={a.fraud_score} display={a.fraud_risk}
+                  color={a.fraud_risk === "LOW" ? "var(--success)" : a.fraud_risk === "MEDIUM" ? "var(--warning)" : "var(--danger)"} />
+              </div>
+              <div className="bp-panel">
+                <small>Confidence</small>
+                <div className="bp-conf-v">{r?.confidence ?? "—"}%</div>
+                <div className="bp-conf-bar"><div className="bp-conf-fill" style={{ width: `${r?.confidence || 0}%` }} /></div>
+                <div className="bp-conf-sub">model certainty in this verdict</div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {a && (
-        <TrustScoreHero
-          score={a.trust_score}
-          confidence={r?.confidence}
-          factors={[...(a.factors || [])].sort((x, y) => Math.abs(y.weight ?? y.score ?? 0) - Math.abs(x.weight ?? x.score ?? 0))}
-          analysisId={a.id}
-        />
-      )}
-
-      <CreditRiskPanel borrowerId={id} token={session.token} />
-
-      {a && (
-        <div className="bd-hero-metrics">
-          <div className="bd-metric">
-            <small>REPAYMENT RISK</small>
-            <Gauge label="REPAYMENT RISK" value={a.risk_score} display={a.risk_level}
-              color={a.risk_level === "LOW" ? "var(--success)" : a.risk_level === "MEDIUM" ? "var(--warning)" : "var(--danger)"} />
-          </div>
-          <div className="bd-metric">
-            <small>FRAUD RISK</small>
-            <Gauge label="FRAUD RISK" value={a.fraud_score} display={a.fraud_risk}
-              color={a.fraud_risk === "LOW" ? "var(--success)" : a.fraud_risk === "MEDIUM" ? "var(--warning)" : "var(--danger)"} />
-          </div>
-          <div className="bd-metric">
-            <small>CONFIDENCE</small>
-            <div className="bd-metric-value">{r?.confidence ?? "—"}%</div>
-            <div className="bd-metric-bar"><div className="bd-metric-fill" style={{ width: `${r?.confidence || 0}%`, background: "var(--info)" }} /></div>
-          </div>
-        </div>
-      )}
-
+      <div className="bp-toolbar">
+        <Button variant="secondary" size="sm" onClick={toggleEvidence}><Icon name="file-text" size={14} /> Evidence</Button>
+        <Button variant="secondary" size="sm" onClick={() => {
+          downloadJSON(`${id}-analysis.json`, { borrower, analysis, financials });
+          toast.success("Analysis exported");
+        }}><Icon name="download" size={14} /> Export</Button>
+        <Button variant="secondary" size="sm" onClick={() => window.print()}><Icon name="printer" size={14} /> Print</Button>
+        <Button variant="secondary" size="sm" onClick={async () => {
+          const url = window.location.href;
+          try {
+            if (navigator.share) await navigator.share({ title: borrower.name, url });
+            else { await navigator.clipboard.writeText(url); toast.success("Link copied"); }
+          } catch { /* dismissed */ }
+        }}>Share</Button>
+        <Button variant="primary" size="sm" onClick={reRun} disabled={session?.role === "guest"} title={session?.role === "guest" ? "Sign in as a lender for this action" : "Re-run analysis"}>Re-run</Button>
+        <Button variant="primary" size="sm" disabled={drafting} onClick={async () => {
+          if (session?.role === "guest") return toast.error("Guests are read-only — sign in as a lender for these actions");
+          if (drafting) return;
+          setDrafting(true);
+          try {
+            const { loans } = await import("../lib/api");
+            const r = await loans.createRequest({
+              borrower_id: id, amount: borrower.requested_amount || 50000,
+              interest_rate: 12, duration_months: borrower.tenure_months || 12,
+              purpose: borrower.purpose || "",
+            }, session.token);
+            toast.success(r.duplicate ? "Draft already exists — opening it" : "Loan request drafted");
+            navigate(`/loan-requests/${r.id}`);
+          } catch (e) { toast.error("Request failed: " + e.message); }
+          finally { setDrafting(false); }
+        }}>{drafting ? "Drafting…" : "New loan request"}</Button>
+      </div>
       {evidenceOpen && evidence && (
         <Card style={{ marginBottom: 16 }}>
           <CardHeader>
@@ -225,27 +254,23 @@ export default function BorrowerDetails() {
 
       <div className="bd-tab-content">
         {tab === "overview" && a && (
-          <div className="bd-grid">
+          <div className="bp-ov-grid">
             <Card>
-              <CardHeader><CardTitle>Financial Health</CardTitle><CardDescription>Averages across six months</CardDescription></CardHeader>
+              <CardHeader><CardTitle>Cash flow trend</CardTitle><CardDescription>Monthly income vs expenses</CardDescription></CardHeader>
               <CardContent>
-                <div className="bd-bars">
-                  {fin && [
-                    ["Income", fin.avg_income, "var(--success)"],
-                    ["Expenses", fin.avg_expenses, "var(--warning)"],
-                    ["Debt", fin.avg_debt, "var(--danger)"],
-                  ].map(([k, v, c]) => (
-                    <div key={k} className="bd-bar-row">
-                      <span className="bd-bar-label">{k}</span>
-                      <div className="bd-bar-track"><div className="bd-bar-fill" style={{ width: `${(v / Math.max(1, fin.avg_income)) * 100}%`, background: c }} /></div>
-                      <span className="bd-bar-value">{inr(v)}</span>
-                    </div>
-                  ))}
-                </div>
+                <CashFlowChart title="" points={(cashflow?.snapshots?.length ? cashflow.snapshots : financials).map((s) => ({
+                    label: s.label || `M${s.month}`,
+                    values: { income: s.income || 0, expenses: s.expenses || 0 },
+                  }))}
+                  format={(v) => inr(Math.round(v))}
+                  series={[
+                    { key: "income", label: "Income", color: "var(--success)" },
+                    { key: "expenses", label: "Expenses", color: "var(--warning)" },
+                  ]} />
                 {fin && (
-                  <div className="bd-grid-2" style={{ marginTop: 14 }}>
-                    <div className="bd-stat"><small>Debt-to-income</small><b>{fin.dti}</b></div>
-                    <div className="bd-stat"><small>Repayment capacity</small><b>{(fin.repayment_capacity * 100).toFixed(0)}%</b></div>
+                  <div style={{ marginTop: 14 }}>
+                    <div className="bp-ratio"><span>Debt-to-income</span><b>{fin.dti}</b></div>
+                    <div className="bp-ratio"><span>Repayment capacity</span><b>{(fin.repayment_capacity * 100).toFixed(0)}%</b></div>
                   </div>
                 )}
               </CardContent>

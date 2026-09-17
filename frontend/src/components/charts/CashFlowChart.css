@@ -32,6 +32,7 @@
 .cfc-stage { position: relative; }
 .cfc-svg { width: 100%; height: auto; display: block; cursor: crosshair; }
 .cfc-grid { stroke: var(--border); stroke-width: 1; stroke-dasharray: 3 5; opacity: 0.8; }
+.cfc-zero { stroke: var(--text-muted); stroke-width: 1.4; opacity: 0.9; }
 .cfc-cross { stroke: var(--primary); stroke-width: 1.4; stroke-dasharray: 4 3; }
 .cfc-xlabel { font-size: 11px; fill: var(--text-muted); font-weight: 600; }
 

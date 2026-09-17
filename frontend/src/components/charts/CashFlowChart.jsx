@@ -15,10 +15,10 @@ export default function CashFlowChart({ title, subtitle, points = [], series = [
   const [hover, setHover] = useState(null);
 
   const visible = useMemo(() => series.filter((s) => !hidden[s.key]), [series, hidden]);
-  const max = useMemo(() => {
-    let m = 0;
-    for (const p of points) for (const s of visible) m = Math.max(m, p.values?.[s.key] || 0);
-    return m || 1;
+  const [min, max] = useMemo(() => {
+    const values = points.flatMap(p => visible.map(s => p.values?.[s.key])).filter(Number.isFinite);
+    const low = Math.min(0, ...values), high = Math.max(0, ...values);
+    return low === high ? [0, 1] : [low, high];
   }, [points, visible]);
 
   const W = 680, H = 260, PL = 8, PR = 8, PT = 14, PB = 30;
@@ -26,10 +26,19 @@ export default function CashFlowChart({ title, subtitle, points = [], series = [
   const n = Math.max(points.length, 1);
   const slot = iw / n;
   const x = (i) => PL + slot * i + slot / 2;
-  const y = (v) => PT + ih - (Math.min(v, max) / max) * ih;
+  const y = (v) => PT + ih - ((v - min) / (max - min)) * ih;
+  const zero = y(0);
 
-  const linePath = (key) =>
-    points.map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(p.values?.[key] || 0).toFixed(1)}`).join(" ");
+  const linePath = (key) => {
+    let connected = false;
+    return points.map((p, i) => {
+      const value = p.values?.[key];
+      if (!Number.isFinite(value)) { connected = false; return ""; }
+      const segment = `${connected ? "L" : "M"}${x(i).toFixed(1)},${y(value).toFixed(1)}`;
+      connected = true;
+      return segment;
+    }).join(" ");
+  };
 
   const toggleSeries = (key) => setHidden((h) => ({ ...h, [key]: !h[key] }));
 
@@ -83,19 +92,21 @@ export default function CashFlowChart({ title, subtitle, points = [], series = [
             <line key={f} x1={PL} x2={W - PR} y1={PT + ih * (1 - f)} y2={PT + ih * (1 - f)}
               className="cfc-grid" />
           ))}
+          {min < 0 && <line x1={PL} x2={W - PR} y1={zero} y2={zero} className="cfc-zero" />}
           <AnimatePresence mode="wait">
             {view === "bars" ? (
               <motion.g key="bars" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
                 {points.map((p, i) => (
                   <g key={i}>
                     {visible.map((s, j) => {
-                      const v = p.values?.[s.key] || 0;
-                      const h = Math.max((v / max) * ih, v > 0 ? 3 : 0);
+                      const v = p.values?.[s.key];
+                      if (!Number.isFinite(v)) return null;
+                      const top = Math.min(y(v), zero), height = Math.abs(y(v) - zero);
                       const cx = x(i) + (j - (visible.length - 1) / 2) * bw;
                       return (
                         <motion.rect key={s.key} x={cx - bw / 2} width={bw} rx={4}
-                          fill={s.color} initial={{ y: PT + ih, height: 0 }}
-                          animate={{ y: PT + ih - h, height: h }}
+                          fill={s.color} initial={{ y: zero, height: 0 }}
+                          animate={{ y: top, height }}
                           transition={{ type: "spring", stiffness: 260, damping: 26, delay: i * 0.02 }}>
                           <title>{`${p.label} · ${s.label}: ${format(v)}`}</title>
                         </motion.rect>
@@ -113,11 +124,11 @@ export default function CashFlowChart({ title, subtitle, points = [], series = [
                       initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
                       transition={{ duration: 0.7, ease: "easeOut" }} />
                     {points.map((p, i) => (
-                      <motion.circle key={i} cx={x(i)} cy={y(p.values?.[s.key] || 0)} r={hover === i ? 5 : 3.4}
+                      <motion.circle key={i} cx={x(i)} cy={y(p.values?.[s.key] ?? min)} r={hover === i ? 5 : 3.4}
                         fill="#fff" stroke={s.color} strokeWidth={2.4}
                         initial={{ scale: 0 }} animate={{ scale: 1 }}
                         transition={{ delay: 0.05 * i, type: "spring", stiffness: 400, damping: 18 }}>
-                        <title>{`${p.label} · ${s.label}: ${format(p.values?.[s.key] || 0)}`}</title>
+                        <title>{`${p.label} · ${s.label}: ${format(p.values?.[s.key] ?? 0)}`}</title>
                       </motion.circle>
                     ))}
                   </g>
@@ -140,7 +151,7 @@ export default function CashFlowChart({ title, subtitle, points = [], series = [
             {visible.map((s) => (
               <div key={s.key} className="cfc-tip-row">
                 <span className="cfc-dot" style={{ background: s.color }} />
-                {s.label}: <b>{format(points[hover].values?.[s.key] || 0)}</b>
+                {s.label}: <b>{format(points[hover].values?.[s.key] ?? 0)}</b>
               </div>
             ))}
           </div>

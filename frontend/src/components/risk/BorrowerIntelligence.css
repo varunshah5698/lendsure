@@ -1,0 +1,60 @@
+/* Borrower financial intelligence — scoped styles on existing tokens. */
+
+.bi { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.bi-stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.bi-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.bi-actions h2 { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: -0.01em; }
+.bi-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.bi-card { min-width: 0; }
+.bi-overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.bi-model-notice {
+  margin: 0; padding: 10px 14px; border-radius: 12px;
+  background: var(--warning-light, rgba(251, 191, 36, 0.13));
+  border: 1px solid color-mix(in srgb, var(--warning, #fbbf24) 40%, transparent);
+  color: var(--text-primary); font-size: 12.5px; font-weight: 600;
+}
+.bi-error { margin: 0; color: var(--danger); font-weight: 700; font-size: 13px; }
+.bi-notice { color: var(--warning); font-weight: 600; font-size: 12.5px; }
+.bi-muted { color: var(--text-muted); font-size: 13px; }
+
+.bi-form { display: flex; flex-direction: column; gap: 10px; border: none; padding: 0; margin: 0; min-width: 0; }
+.bi-form label { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; font-weight: 700; color: var(--text-secondary); min-width: 0; }
+.bi-form input, .bi-form select { max-width: 100%; }
+.bi-form small { color: var(--text-muted); font-weight: 600; }
+.bi-check { flex-direction: row !important; align-items: flex-start; gap: 8px !important; font-weight: 600 !important; }
+.bi-check input { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+.bi-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+
+.bi-metrics { margin: 10px 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px 16px; }
+.bi-metrics > div { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); min-width: 0; }
+.bi-metrics dt { color: var(--text-muted); font-size: 12.5px; font-weight: 600; }
+.bi-metrics dd { margin: 0; font-weight: 800; font-size: 13px; text-align: right; overflow-wrap: anywhere; }
+
+.bi-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; display: block; overflow-x: auto; }
+.bi-table caption { caption-side: top; text-align: left; font-weight: 800; font-size: 12.5px; padding: 8px 0 6px; color: var(--text-secondary); }
+.bi-table th, .bi-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; white-space: nowrap; }
+.bi-table th { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+.bi-table td { font-variant-numeric: tabular-nums; }
+
+.bi-timeline { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.bi-timeline li { display: grid; grid-template-columns: 110px auto; gap: 4px 12px; padding: 10px 12px; background: var(--bg-alt); border-radius: 12px; }
+.bi-timeline time { font-weight: 700; font-size: 12px; color: var(--text-muted); }
+.bi-timeline b { font-size: 13px; }
+.bi-timeline span { grid-column: 1 / -1; color: var(--text-secondary); font-size: 12.5px; }
+
+.bi-semantics { margin: 8px 0 0; display: flex; flex-direction: column; gap: 8px; }
+.bi-semantics > div { padding: 9px 12px; background: var(--bg-alt); border-radius: 10px; }
+.bi-semantics dt { font-size: 11px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); }
+.bi-semantics dd { margin: 3px 0 0; font-size: 12.5px; color: var(--text-secondary); }
+
+.bi-consents { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.bi-consents li { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 12px; background: var(--bg-alt); border-radius: 12px; flex-wrap: wrap; }
+.bi-consents p { margin: 4px 0 2px; font-size: 12.5px; color: var(--text-secondary); }
+.bi-consents small { color: var(--text-muted); font-size: 11.5px; }
+
+@media (max-width: 640px) {
+  .bi-timeline li { grid-template-columns: 1fr; }
+  .bi-metrics { grid-template-columns: 1fr; }
+  .bi-actions { flex-direction: column; align-items: stretch; }
+  .bi-actions .btn { width: 100%; }
+}

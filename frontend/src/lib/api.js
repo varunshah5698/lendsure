@@ -19,6 +19,9 @@ function flagExpired() {
 async function fetchOnce(path, opts, timeoutMs) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  const cancel = () => ctrl.abort();
+  opts.signal?.addEventListener("abort", cancel, { once: true });
+  if (opts.signal?.aborted) ctrl.abort();
   try {
     return await fetch(`${BASE}${path}`, {
       ...opts,
@@ -30,11 +33,12 @@ async function fetchOnce(path, opts, timeoutMs) {
     });
   } finally {
     clearTimeout(timer);
+    opts.signal?.removeEventListener("abort", cancel);
   }
 }
 
 export async function api(path, opts = {}, token = null) {
-  const { timeoutMs, ...fetchOpts } = opts || {};
+  const { timeoutMs, privateIntelligence = false, ...fetchOpts } = opts || {};
   const first = !firstRequestDone;
   const firstBudget = timeoutMs || FIRST_TIMEOUT_MS;
   const normalBudget = timeoutMs || REQUEST_TIMEOUT_MS;
@@ -44,7 +48,7 @@ export async function api(path, opts = {}, token = null) {
       r = await fetchOnce(path, fetchOpts, first ? firstBudget : normalBudget);
     } catch (e) {
       // One automatic retry for the waking-server case only.
-      if (first && (e?.name === "AbortError" || e instanceof TypeError)) {
+      if (first && !privateIntelligence && !fetchOpts.signal?.aborted && (e?.name === "AbortError" || e instanceof TypeError)) {
         r = await fetchOnce(path, fetchOpts, firstBudget);
       } else {
         throw e;
@@ -53,6 +57,7 @@ export async function api(path, opts = {}, token = null) {
       firstRequestDone = true;
     }
   } catch (e) {
+    if (fetchOpts.signal?.aborted) throw e;
     if (e?.name === "AbortError") {
       throw new Error(
         "Server is waking up (cold start). Wait 30 seconds and try again."
@@ -73,6 +78,10 @@ export async function api(path, opts = {}, token = null) {
       const body = await r.json();
       msg = body.detail || msg;
     } catch {}
+    if (privateIntelligence) {
+      const message = r.status === 503 ? "Provider unavailable. Authorized production integration is not connected." : r.status >= 500 ? "Intelligence request failed. Please retry." : typeof msg === "string" ? msg : "Invalid intelligence request; check the fields and limits.";
+      throw Object.assign(new Error(message), { status: r.status });
+    }
     if (r.status >= 500) {
       // Never show stack traces / SQL / paths to users — log for devs only.
       try { console.error(`[api] ${r.status} ${path}:`, msg); } catch {}
@@ -347,6 +356,22 @@ export const grievances = {
 };
 
 // Intelligence: health, monitoring, history, warnings, portfolio
+const intelligenceRequest = (bid, suffix, data, signal) => api(
+  `/ls/borrowers/${encodeURIComponent(bid)}/intelligence${suffix}`,
+  { privateIntelligence: true, cache: "no-store", signal,
+    ...(data === undefined ? {} : { method: "POST", body: JSON.stringify(data) }) }
+);
+
+export const intelligence = {
+  get: (bid, signal) => intelligenceRequest(bid, "", undefined, signal),
+  consent: (bid, data, signal) => intelligenceRequest(bid, "/consents", data, signal),
+  revoke: (bid, id, signal) => intelligenceRequest(bid, `/consents/${encodeURIComponent(id)}/revoke`, {}, signal),
+  fetchCredit: (bid, consent_id, signal) => intelligenceRequest(bid, "/credit/fetch", { consent_id }, signal),
+  demo: (bid, consent_id, signal) => intelligenceRequest(bid, "/cashflow/demo", { consent_id }, signal),
+  records: (bid, data, signal) => intelligenceRequest(bid, "/cashflow/records", data, signal),
+  statement: (bid, data, signal) => intelligenceRequest(bid, "/cashflow/statement", data, signal),
+};
+
 export const intel = {
   health: (part, token) => api(`/api/health/${part}`, {}, token),
   monitoring: (token) => api("/api/ls/admin/model/monitoring", {}, token),

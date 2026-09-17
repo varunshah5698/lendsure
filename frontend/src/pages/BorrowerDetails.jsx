@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/ui/Toast";
@@ -23,6 +23,7 @@ import AuditTimeline from "../components/audit/AuditTimeline";
 import EmptyState from "../components/ui/EmptyState";
 import Icon from "../components/ui/Icon";
 import ErrorState from "../components/ui/ErrorState";
+import BorrowerIntelligence from "../components/risk/BorrowerIntelligence";
 import { SkeletonCard } from "../components/ui/Skeleton";
 import "./BorrowerDetails.css";
 import "./BorrowerProfile.css";
@@ -31,6 +32,8 @@ const TABS = [
   { key: "overview", label: "Overview" },
   { key: "cashflow", label: "Cash Flow" },
   { key: "repayment", label: "Repayment" },
+  { key: "intelligence", label: "Financial Intelligence" },
+  { key: "credit", label: "Credit Intelligence" },
   { key: "documents", label: "Documents" },
   { key: "network", label: "Network" },
   { key: "fraud", label: "Fraud & Trust" },
@@ -38,6 +41,7 @@ const TABS = [
   { key: "recommend", label: "Recommendation" },
   { key: "audit", label: "Audit" },
 ];
+const TAB_KEYS = new Set(TABS.map((t) => t.key));
 
 export default function BorrowerDetails() {
   const { id } = useParams();
@@ -45,7 +49,7 @@ export default function BorrowerDetails() {
   const { session } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
-  const [tab, setTab] = useState(searchParams.get("tab") || "overview");
+  const [tab, setTab] = useState(TAB_KEYS.has(searchParams.get("tab")) ? searchParams.get("tab") : "overview");
   const [borrower, setBorrower] = useState(null);
   const [analysis, setAnalysis] = useState(null);
   const [financials, setFinancials] = useState([]);
@@ -79,6 +83,12 @@ export default function BorrowerDetails() {
   }, [id, session]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    const requested = searchParams.get("tab");
+    if (requested && TAB_KEYS.has(requested) && requested !== tab) setTab(requested);
+    else if (requested && !TAB_KEYS.has(requested)) setSearchParams({ tab }, { replace: true });
+  }, [searchParams, tab]);
 
   const handleTabChange = (key) => {
     setTab(key);
@@ -308,6 +318,7 @@ export default function BorrowerDetails() {
 
         {tab === "cashflow" && <CashFlowTab financials={financials} cashflow={cashflow} />}
         {tab === "repayment" && <RepaymentTab borrower={borrower} fin={fin} />}
+        {["intelligence", "credit"].includes(tab) && <BorrowerIntelligence bid={id} session={session} view={tab} />}
         {tab === "documents" && <DocumentsTab borrower={borrower} bid={id} token={session.token} toast={toast} guest={session?.role === "guest"} />}
         {tab === "network" && <NetworkTab bid={id} token={session.token} guest={session?.role === "guest"} />}
         {tab === "fraud" && <FraudTrustTab analysis={a} />}

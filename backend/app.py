@@ -51,6 +51,9 @@ def _load_dotenv():
         print(f"[env] ignoring unreadable .env: {e}", flush=True)
 
 
+_INTELLIGENCE_ENV = {key: os.environ[key] for key in (
+    "LENDSURE_ENV", "LENDSURE_INTELLIGENCE_DEMO", "LENDSURE_CIBIL_PROVIDER",
+    "LENDSURE_INTELLIGENCE_TRANSFER_CATEGORIES") if key in os.environ}
 _load_dotenv()
 
 from lendsure.schema import DDL as LS_DDL, LIFECYCLE_DDL, LS_MIGRATIONS
@@ -430,6 +433,10 @@ def _ls_session(authorization: Optional[str]) -> Optional[dict]:
 
 ls_api.configure(db, _ls_session)
 app.include_router(ls_api.router)
+
+from lendsure import intelligence as intelligence_api
+intelligence_api.configure(db, _ls_session, environment=_INTELLIGENCE_ENV)
+app.include_router(intelligence_api.router)
 
 fi_api.configure(db, _ls_session)
 fi_api.init_fi_db()

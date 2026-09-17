@@ -298,7 +298,67 @@ CREATE INDEX IF NOT EXISTS idx_gn_g ON ls_grievance_notes (grievance_id);
 # Column migrations for existing tables (each applied once, failures ignored).
 # Column migrations. Each entry is (name, sql) — applied once via the
 # ls_migrations ledger in app.init_db (own transaction, rollback on failure).
+INTELLIGENCE_DDL = """
+CREATE TABLE IF NOT EXISTS ls_intelligence_access (
+    borrower_id TEXT NOT NULL REFERENCES ls_borrowers(borrower_id) ON DELETE CASCADE,
+    principal TEXT NOT NULL,
+    demo_only INTEGER NOT NULL DEFAULT 0 CHECK (demo_only IN (0,1)),
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (borrower_id, principal),
+    CHECK (demo_only=0 OR borrower_id GLOB 'DEMO-*')
+);
+CREATE INDEX IF NOT EXISTS idx_intelligence_access_principal ON ls_intelligence_access(principal);
+CREATE TABLE IF NOT EXISTS ls_intelligence_consents (
+    id TEXT PRIMARY KEY,
+    borrower_id TEXT NOT NULL,
+    principal TEXT NOT NULL,
+    scope TEXT NOT NULL CHECK (scope IN ('credit','cashflow')),
+    mode TEXT NOT NULL CHECK (mode IN ('sandbox','attested')),
+    status TEXT NOT NULL CHECK (status IN ('sandbox','attested','revoked')),
+    purpose TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (borrower_id, principal) REFERENCES ls_intelligence_access(borrower_id, principal) ON DELETE CASCADE,
+    UNIQUE (id, borrower_id, principal),
+    CHECK (mode!='attested' OR scope='cashflow')
+);
+CREATE INDEX IF NOT EXISTS idx_intelligence_consent_owner ON ls_intelligence_consents(borrower_id, principal, scope, expires_at);
+CREATE TABLE IF NOT EXISTS ls_intelligence_credit (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    borrower_id TEXT NOT NULL,
+    principal TEXT NOT NULL,
+    consent_id TEXT NOT NULL,
+    source TEXT NOT NULL CHECK (source IN ('DEMO/SANDBOX','CREDIT BUREAU')),
+    provider TEXT NOT NULL,
+    report_json TEXT NOT NULL,
+    fetched_at TEXT NOT NULL,
+    FOREIGN KEY (consent_id, borrower_id, principal) REFERENCES ls_intelligence_consents(id, borrower_id, principal) ON DELETE CASCADE,
+    UNIQUE (consent_id, source, provider)
+);
+CREATE INDEX IF NOT EXISTS idx_intelligence_credit_owner ON ls_intelligence_credit(borrower_id, principal, fetched_at);
+CREATE TABLE IF NOT EXISTS ls_intelligence_records (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    borrower_id TEXT NOT NULL,
+    principal TEXT NOT NULL,
+    consent_id TEXT NOT NULL,
+    source TEXT NOT NULL CHECK (source IN ('BANK-DERIVED','DECLARED BY BORROWER','DEMO/SANDBOX')),
+    provider TEXT NOT NULL,
+    record_date TEXT NOT NULL,
+    direction TEXT NOT NULL CHECK (direction IN ('in','out')),
+    amount REAL NOT NULL CHECK (amount>0 AND amount<=1000000000000),
+    category TEXT NOT NULL,
+    balance REAL CHECK (balance BETWEEN -1000000000000 AND 1000000000000),
+    fingerprint TEXT NOT NULL,
+    fetched_at TEXT NOT NULL,
+    FOREIGN KEY (consent_id, borrower_id, principal) REFERENCES ls_intelligence_consents(id, borrower_id, principal) ON DELETE CASCADE,
+    UNIQUE (borrower_id, principal, source, fingerprint)
+);
+CREATE INDEX IF NOT EXISTS idx_intelligence_records_consent ON ls_intelligence_records(consent_id);
+CREATE INDEX IF NOT EXISTS idx_intelligence_records_owner_date ON ls_intelligence_records(borrower_id, principal, source, record_date);
+"""
+
 LS_MIGRATIONS = [
+    ("intelligence.v1", INTELLIGENCE_DDL),
     ("borrowers.phone", "ALTER TABLE ls_borrowers ADD COLUMN phone TEXT DEFAULT ''"),
     ("borrowers.email", "ALTER TABLE ls_borrowers ADD COLUMN email TEXT DEFAULT ''"),
     ("borrowers.address_line", "ALTER TABLE ls_borrowers ADD COLUMN address_line TEXT DEFAULT ''"),

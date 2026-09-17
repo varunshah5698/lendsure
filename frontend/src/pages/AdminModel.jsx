@@ -26,7 +26,7 @@ export default function AdminModel() {
 
   return (
     <div>
-      <PageHeader title="How Scoring Works" description="One place for how LendSure scores borrowers — rules plus the trained model" />
+      <PageHeader eyebrow="Governance" title="How Scoring Works" description="One place for how LendSure scores borrowers — rules plus the trained model" />
 
       <Card style={{ marginBottom: 16 }}>
         <CardHeader><CardTitle>1 · Rules engine (deterministic)</CardTitle>

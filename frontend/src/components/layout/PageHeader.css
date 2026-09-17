@@ -17,3 +17,18 @@
 }
 .page-header-desc { font-size: 13.5px; color: var(--text-secondary); margin: 6px 0 0; max-width: 640px; }
 .page-header-actions { display: flex; gap: 10px; flex-shrink: 0; align-items: center; }
+.page-header-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 3px 11px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--primary);
+  background: var(--primary-light);
+  border: 1.5px solid var(--primary);
+  border-radius: 999px;
+}

@@ -108,25 +108,46 @@ function Nucleus() {
           />
         </mesh>
 
-        {/* "Borrowers" label pinned to the nucleus centre */}
-        <Html center distanceFactor={8} style={{ pointerEvents: "none" }}>
+      </group>
+
+      {/* "Borrowers" label — outside the rotating nucleus group so it stays
+          upright, static and readable at all times (a 3D-tracked DOM pill) */}
+      <Html center distanceFactor={8} position={[0, 0.02, 0]} style={{ pointerEvents: "none" }} zIndexRange={[20, 0]}>
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "7px",
+            padding: "6px 14px",
+            borderRadius: "999px",
+            background: "rgba(251,191,36,0.12)",
+            border: "1.5px solid rgba(251,191,36,0.55)",
+            boxShadow: "0 0 26px rgba(245,158,11,0.35), inset 0 0 12px rgba(251,191,36,0.08)",
+            color: "#fde68a",
+            fontFamily: "'Inter', system-ui, sans-serif",
+            fontWeight: 700,
+            fontSize: "12px",
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            textShadow: "0 0 10px rgba(251,191,36,0.55)",
+            whiteSpace: "nowrap",
+            userSelect: "none",
+            backdropFilter: "blur(6px)",
+          }}
+        >
           <span
             style={{
-              color: "#fbbf24",
-              fontFamily: "'Inter', system-ui, sans-serif",
-              fontWeight: 700,
-              fontSize: "13px",
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              textShadow: "0 0 12px rgba(251,191,36,0.7), 0 0 4px rgba(0,0,0,0.6)",
-              whiteSpace: "nowrap",
-              userSelect: "none",
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: "#fbbf24",
+              boxShadow: "0 0 8px #fbbf24",
+              display: "inline-block",
             }}
-          >
-            Borrowers
-          </span>
-        </Html>
-      </group>
+          />
+          Borrowers
+        </span>
+      </Html>
 
       {/* Golden/Amber boundary ring around nucleus (like yellow circle in drawing) */}
       <group ref={ringRef}>

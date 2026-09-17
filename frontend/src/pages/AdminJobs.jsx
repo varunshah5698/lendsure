@@ -48,7 +48,7 @@ export default function AdminJobs() {
   const guest = isGuest(session);
   return (
     <div>
-      <PageHeader title="Background Jobs" description="Async work with real status — document verification, retries, failures" />
+      <PageHeader eyebrow="Governance" title="Background Jobs" description="Async work with real status — document verification, retries, failures" />
       {!loading && !error && data?.by_status && (
         <div className="dash-metrics" style={{ marginBottom: 16 }}>
           {Object.entries(data.by_status).map(([k, v]) => (

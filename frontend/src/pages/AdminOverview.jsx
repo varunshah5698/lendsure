@@ -39,30 +39,43 @@ export default function AdminOverview() {
   return (
     <div>
       <PageHeader
+        eyebrow="Governance"
         title="Admin Overview"
         description={`Command center · model ${data.model_version} · ${data.borrowers?.toLocaleString()} borrowers`}
       />
 
       <div className="admin-stat-grid">
-        <Card padding="sm">
-          <div className="admin-stat-label">Pending Reviews</div>
+        <Card padding="sm" className="admin-stat-card">
+          <div className="admin-stat-top">
+            <div className="admin-stat-label">Pending Reviews</div>
+            <span className="admin-stat-icon"><Icon name="clock" size={16} /></span>
+          </div>
           <div className={`admin-stat-value ${data.pending_review > 0 ? "admin-stat-alert" : ""}`}>
             {data.pending_review}
           </div>
           <Link to="/admin/approvals?filter=pending" className="admin-stat-link">Open approval queue →</Link>
         </Card>
-        <Card padding="sm">
-          <div className="admin-stat-label">Borrowers</div>
+        <Card padding="sm" className="admin-stat-card">
+          <div className="admin-stat-top">
+            <div className="admin-stat-label">Borrowers</div>
+            <span className="admin-stat-icon"><Icon name="users" size={16} /></span>
+          </div>
           <div className="admin-stat-value">{data.borrowers?.toLocaleString()}</div>
           <div className="admin-stat-sub">{data.analyses?.toLocaleString()} total analyses</div>
         </Card>
-        <Card padding="sm">
-          <div className="admin-stat-label">Avg Trust / Confidence</div>
+        <Card padding="sm" className="admin-stat-card">
+          <div className="admin-stat-top">
+            <div className="admin-stat-label">Avg Trust / Confidence</div>
+            <span className="admin-stat-icon"><Icon name="shield-check" size={16} /></span>
+          </div>
           <div className="admin-stat-value">{data.avg_trust} <span className="admin-stat-unit">/ {data.avg_confidence}</span></div>
           <div className="admin-stat-sub">Across latest analyses</div>
         </Card>
-        <Card padding="sm">
-          <div className="admin-stat-label">High Risk / High Fraud</div>
+        <Card padding="sm" className="admin-stat-card">
+          <div className="admin-stat-top">
+            <div className="admin-stat-label">High Risk / High Fraud</div>
+            <span className="admin-stat-icon"><Icon name="alert" size={16} /></span>
+          </div>
           <div className="admin-stat-value">{data.high_risk} <span className="admin-stat-unit">/ {data.high_fraud}</span></div>
           <div className="admin-stat-sub">{data.reviewed} decisions reviewed</div>
         </Card>

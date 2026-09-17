@@ -58,6 +58,7 @@ export default function Officers() {
   return (
     <div>
       <PageHeader
+        eyebrow="Governance"
         title="Recovery Officers"
         description="Each officer owns one city. Borrowers from that city default to them, and cross-city cases route through transfer requests."
         actions={<Button variant="primary" size="sm" onClick={() => setOpen(true)}>＋ Add officer</Button>}

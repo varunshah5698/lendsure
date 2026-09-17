@@ -88,6 +88,7 @@ export default function AdminSettings() {
   return (
     <div>
       <PageHeader
+        eyebrow="Governance"
         title="Settings"
         description="API keys and system configuration"
         actions={sessions.some((s) => !s.expired && !s.current) ? (

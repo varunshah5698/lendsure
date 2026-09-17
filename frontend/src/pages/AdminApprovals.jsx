@@ -91,6 +91,7 @@ export default function AdminApprovals() {
   return (
     <div>
       <PageHeader
+        eyebrow="Governance"
         title="Approvals"
         description="Review engine decisions, approve, reject or override with a documented reason"
       />

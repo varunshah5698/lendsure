@@ -18,7 +18,7 @@ def _otp_for(client, email, purpose="verify"):
 def test_register_then_login_flow(client):
     # Password-only: signup saves (no session), signin checks + opens.
     r = client.post("/api/auth/register",
-                    json={"name": "A", "email": "a@example.com", "password": "Strongpass1"})
+                    json={"name": "Anil", "username": "anil", "email": "a@example.com", "password": "Strongpass1"})
     assert r.status_code == 200
     assert "lendsure_session" not in r.headers.get("set-cookie", "")
     assert client.get("/api/auth/me").status_code == 401
@@ -41,18 +41,85 @@ def test_register_then_login_flow(client):
 
 def test_register_duplicate_signals_signin(client):
     client.post("/api/auth/register",
-                json={"name": "A", "email": "dup@example.com", "password": "Strongpass2"})
+                json={"name": "Dup Amit", "username": "dupamit", "email": "dup@example.com", "password": "Strongpass2"})
     r = client.post("/api/auth/register",
-                    json={"name": "B", "email": "dup@example.com", "password": "Strongpass2"})
+                    json={"name": "Dup Bina", "username": "dupbina", "email": "dup@example.com", "password": "Strongpass2"})
     assert r.status_code == 400
     assert "sign in" in r.json()["detail"].lower()
 
 
 def test_weak_passwords_rejected(client):
-    for pw in ["short", "allletters", "12345678", "Password", "qwerty123"]:
+    for i, pw in enumerate(["short", "allletters", "12345678", "Password", "qwerty123"]):
         r = client.post("/api/auth/register",
-                        json={"name": "A", "email": f"{pw}@example.com", "password": pw})
+                        json={"name": "Weak User", "username": f"weakuser{i}",
+                              "email": f"{pw}@example.com", "password": pw})
         assert r.status_code == 400, pw
+
+
+def test_username_constraints_enforced(client):
+    base = {"name": "Uma User", "email": "uma@example.com", "password": "Strongpass1"}
+    bad = [
+        ({}, "Choose a username"),  # missing entirely
+        ({"username": "ab"}, "3-20"),  # too short
+        ({"username": "a" * 21}, "3-20"),  # too long
+        ({"username": "uma user"}, "spaces"),  # inner space
+        ({"username": "Uma!#"}, "small letters"),  # bad charset
+    ]
+    for i, (extra, hint) in enumerate(bad):
+        payload = {**base, "email": f"uma{i}@example.com", **extra}
+        r = client.post("/api/auth/register", json=payload)
+        assert r.status_code == 400, extra
+        assert hint.lower() in r.json()["detail"].lower(), r.json()
+    # Uppercase is normalized to small letters, underscores allowed.
+    r = client.post("/api/auth/register",
+                    json={**base, "username": "Uma_User"})
+    assert r.status_code == 200, r.text
+    assert r.json()["username"] == "uma_user"
+
+
+def test_duplicate_username_rejected(client):
+    first = {"name": "Vic One", "username": "vic", "email": "vic1@example.com",
+             "password": "Strongpass1"}
+    r = client.post("/api/auth/register", json=first)
+    assert r.status_code == 200, r.text
+    r = client.post("/api/auth/register",
+                    json={"name": "Vic Two", "username": "vic", "email": "vic2@example.com",
+                          "password": "Strongpass1"})
+    assert r.status_code == 400
+    assert "taken" in r.json()["detail"].lower()
+
+
+def test_full_name_constraints_enforced(client):
+    for i, (name, hint) in enumerate([
+        ("", "full name"),  # missing
+        ("X", "at least 2"),  # too short
+        ("N" * 61, "at most 60"),  # too long
+        ("9lives", "letters"),  # must start with a letter
+    ]):
+        r = client.post("/api/auth/register",
+                        json={"name": name, "username": f"fullname{i}",
+                              "email": f"fullname{i}@example.com", "password": "Strongpass1"})
+        assert r.status_code == 400, name
+        assert hint.lower() in r.json()["detail"].lower(), r.json()
+
+
+def test_guest_username_compulsory_with_constraints(client):
+    # Missing field is rejected by request validation (422).
+    r = client.post("/api/auth/guest", json={})
+    assert r.status_code == 422
+    for payload, hint in [
+        ({"name": ""}, "username"),  # empty
+        ({"name": "   "}, "username"),  # blank
+        ({"name": "ab"}, "3-20"),  # too short
+        ({"name": "guest explorer"}, "spaces"),  # inner space
+        ({"name": "Guest!"}, "small letters"),  # bad charset
+    ]:
+        r = client.post("/api/auth/guest", json=payload)
+        assert r.status_code == 400, payload
+        assert hint.lower() in r.json()["detail"].lower(), r.json()
+    r = client.post("/api/auth/guest", json={"name": "guest_explorer"})
+    assert r.status_code == 200, r.text
+    assert r.json()["display_name"] == "guest_explorer"
 
 
 def test_wrong_password_locks_out(client, lender):
@@ -129,8 +196,8 @@ def test_activity_refreshes_timer(lender):
 def test_logout_kills_only_own_session(client):
     from fastapi.testclient import TestClient
     c2 = TestClient(app_module.app)
-    client.post("/api/auth/guest", json={"name": "A"})
-    c2.post("/api/auth/guest", json={"name": "B"})
+    client.post("/api/auth/guest", json={"name": "alan"})
+    c2.post("/api/auth/guest", json={"name": "bina"})
     assert client.post("/api/auth/logout").status_code == 200
     assert client.get("/api/auth/me").status_code == 401
     assert c2.get("/api/auth/me").status_code == 200
@@ -153,7 +220,7 @@ def test_production_no_smtp_register_still_works(client, monkeypatch):
     monkeypatch.setattr(app_module, "DEMO_OTP", False)
     # Password-only signup needs no email delivery at all.
     r = client.post("/api/auth/register",
-                    json={"name": "P", "email": "prod@example.com", "password": "Strongpass1"})
+                    json={"name": "Pam", "username": "pam", "email": "prod@example.com", "password": "Strongpass1"})
     assert r.status_code == 200
     assert "demo_otp" not in r.json()
     r = client.post("/api/auth/login",
@@ -188,7 +255,7 @@ def test_phone_otp_disabled_without_demo(client, monkeypatch):
 
 def test_register_persists_phone(client):
     r = client.post("/api/auth/register",
-                    json={"name": "P", "email": "ph@example.com",
+                    json={"name": "Pam", "username": "pamphone", "email": "ph@example.com",
                           "password": "Strongpass1", "phone": "9811111111"})
     assert r.status_code == 200
     conn = app_module.db()
@@ -308,7 +375,7 @@ def test_remember_session_ignores_idle_timeout(client):
 
 def test_email_login_gets_remembered_session(client):
     r = client.post("/api/auth/register",
-                    json={"name": "R", "email": "rem@example.com", "password": "Strongpass1"})
+                    json={"name": "Raj", "username": "raj", "email": "rem@example.com", "password": "Strongpass1"})
     assert r.status_code == 200
     r = client.post("/api/auth/login",
                     json={"email": "rem@example.com", "password": "Strongpass1"})
@@ -369,7 +436,7 @@ def test_sendgrid_failure_falls_back_to_smtp_disabled(client, monkeypatch):
 
 def test_argon2id_is_default_hasher(client):
     r = client.post("/api/auth/register",
-                    json={"name": "Ar", "email": "argon@example.com", "password": "Strongpass1"})
+                    json={"name": "Ari", "username": "ari", "email": "argon@example.com", "password": "Strongpass1"})
     assert r.status_code == 200
     conn = app_module.db()
     try:
@@ -408,7 +475,7 @@ def test_legacy_pbkdf2_upgrades_to_argon2_on_login(client):
 
 def test_password_max_length_rejects_giant_input(client):
     r = client.post("/api/auth/register",
-                    json={"name": "G", "email": "giant@example.com", "password": "A1" + "x" * 200})
+                    json={"name": "Gia", "username": "gia", "email": "giant@example.com", "password": "A1" + "x" * 200})
     assert r.status_code == 400
 
 

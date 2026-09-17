@@ -338,6 +338,9 @@ LS_MIGRATIONS = [
      "ALTER TABLE ls_audit ADD COLUMN chain_hash TEXT DEFAULT '';"),
     ("users.phone",
      "ALTER TABLE users ADD COLUMN phone TEXT DEFAULT '';"),
+    ("users.username",
+     "ALTER TABLE users ADD COLUMN username TEXT DEFAULT '';"
+     "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username) WHERE username != '';"),
     ("api_keys.expiry_scopes",
      "ALTER TABLE ls_api_keys ADD COLUMN expires_at TEXT DEFAULT '';"
      "ALTER TABLE ls_api_keys ADD COLUMN scopes TEXT DEFAULT 'read';"

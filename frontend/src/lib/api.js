@@ -98,8 +98,8 @@ export const auth = {
     api("/auth/verify-otp", { method: "POST", body: JSON.stringify({ phone, otp, name }), timeoutMs: AUTH_TIMEOUT_MS }),
   guest: (name) =>
     api("/auth/guest", { method: "POST", body: JSON.stringify({ name }), timeoutMs: AUTH_TIMEOUT_MS }),
-  register: (name, email, password) =>
-    api("/auth/register", { method: "POST", body: JSON.stringify({ name, email, password }), timeoutMs: AUTH_TIMEOUT_MS }),
+  register: (name, username, email, password) =>
+    api("/auth/register", { method: "POST", body: JSON.stringify({ name, username, email, password }), timeoutMs: AUTH_TIMEOUT_MS }),
   verifyEmail: (email, otp) =>
     api("/auth/verify-email", { method: "POST", body: JSON.stringify({ email, otp }), timeoutMs: AUTH_TIMEOUT_MS }),
   resendCode: (email) =>
@@ -263,8 +263,10 @@ export const graph = {
 // Background jobs
 export const jobs = {
   list: (params = {}, token) => {
-    const q = new URLSearchParams(params).toString();
-    return api(`/ls/admin/jobs${q ? `?${q}` : ""}`, {}, token);
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== null && v !== "") q.set(k, v); });
+    const qs = q.toString();
+    return api(`/ls/admin/jobs${qs ? `?${qs}` : ""}`, {}, token);
   },
   retry: (id, token) => api(`/ls/admin/jobs/${id}/retry`, { method: "POST" }, token),
 };
@@ -297,8 +299,10 @@ export const assistant = {
 // Investigation cases
 export const cases = {
   list: (params = {}, token) => {
-    const q = new URLSearchParams(params).toString();
-    return api(`/ls/cases${q ? `?${q}` : ""}`, {}, token);
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== null && v !== "") q.set(k, v); });
+    const qs = q.toString();
+    return api(`/ls/cases${qs ? `?${qs}` : ""}`, {}, token);
   },
   get: (id, token) => api(`/ls/cases/${id}`, {}, token),
   create: (data, token) => api("/ls/cases", { method: "POST", body: JSON.stringify(data) }, token),
@@ -311,8 +315,10 @@ export const cases = {
     api(`/ls/cases/${id}/transfer-review`, { method: "POST", body: JSON.stringify(data) }, token),
   transfers: (id, token) => api(`/ls/cases/${id}/transfers`, {}, token),
   transferQueue: (params = {}, token) => {
-    const q = new URLSearchParams(params).toString();
-    return api(`/ls/transfers${q ? `?${q}` : ""}`, {}, token);
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== null && v !== "") q.set(k, v); });
+    const qs = q.toString();
+    return api(`/ls/transfers${qs ? `?${qs}` : ""}`, {}, token);
   },
 };
 
@@ -334,8 +340,10 @@ export const grievances = {
   track: (ticket_id, phone) =>
     api(`/ls/grievances/track?ticket_id=${encodeURIComponent(ticket_id)}&phone=${encodeURIComponent(phone)}`),
   list: (params = {}, token) => {
-    const q = new URLSearchParams(params).toString();
-    return api(`/ls/grievances${q ? `?${q}` : ""}`, {}, token);
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== null && v !== "") q.set(k, v); });
+    const qs = q.toString();
+    return api(`/ls/grievances${qs ? `?${qs}` : ""}`, {}, token);
   },
   get: (id, token) => api(`/ls/grievances/${id}`, {}, token),
   note: (id, note, token) =>

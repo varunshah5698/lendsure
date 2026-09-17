@@ -484,7 +484,8 @@ class OtpVerifyIn(BaseModel):
 
 
 class GuestIn(BaseModel):
-    name: str = "Guest"
+    # Display name is compulsory — no anonymous "Guest" default.
+    name: str
 
 
 # Phone OTP delivery. In production, Twilio Verify generates and validates the
@@ -868,7 +869,11 @@ def verify_otp(payload: OtpVerifyIn, request: Request, response: Response):
 
 @app.post("/api/auth/guest")
 def guest_login(payload: GuestIn, request: Request, response: Response):
-    name = payload.name.strip() or "Guest"
+    # Guests enter with a username too — same rules as signup (small
+    # letters, no spaces), stored normalized.
+    if (reason := _username_problem(payload.name)) is not None:
+        raise HTTPException(400, reason)
+    name = (payload.name or "").strip().lower()
     profile, token = _make_session("guest", name, "guest", 1, request=request)
     _set_session_cookie(response, request, token, 1)
     _audit_event("auth_login", f"{name} (guest)", {"method": "guest"})
@@ -1027,6 +1032,40 @@ def _password_problem(password: str) -> str | None:
     return None
 
 
+USERNAME_RE = re.compile(r"^[a-z0-9_]{3,20}$")
+# Display names (lender full name, guest name): real human names.
+NAME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9 .'\-]*$")
+
+
+def _username_problem(username: str) -> str | None:
+    """None when acceptable, else the human-readable reason.
+    Usernames are small letters only: 3-20 chars of a-z, 0-9, _ — no spaces."""
+    u = (username or "").strip().lower()
+    if not u:
+        return "Choose a username"
+    if re.search(r"\s", username or ""):
+        return "Username can't contain spaces — use small letters, numbers and _"
+    if len(u) < 3 or len(u) > 20:
+        return "Username must be 3-20 characters"
+    if not USERNAME_RE.match(u):
+        return "Username allows small letters, numbers and _ only"
+    return None
+
+
+def _display_name_problem(name: str, *, field: str = "Name", max_len: int = 60) -> str | None:
+    """None when acceptable, else the human-readable reason."""
+    n = (name or "").strip()
+    if not n:
+        return f"Enter your {field.lower()}"
+    if len(n) < 2:
+        return f"{field} must be at least 2 characters"
+    if len(n) > max_len:
+        return f"{field} must be at most {max_len} characters"
+    if not NAME_RE.match(n):
+        return f"{field} can only contain letters, numbers, spaces and . ' -"
+    return None
+
+
 def _unsent_code_or_503(sent: bool, code: str) -> dict:
     """Fail-secure delivery accounting for email/SMS codes.
 
@@ -1078,6 +1117,7 @@ def _check_email_otp(conn, email: str, purpose: str, code: str) -> None:
 
 class RegisterIn(BaseModel):
     name: str = ""
+    username: str = ""
     email: str
     password: str
     phone: str = ""
@@ -1113,13 +1153,16 @@ def register(payload: RegisterIn, request: Request):
     No session is created here — the user signs in on the Sign in tab,
     where the password is checked. No OTP anywhere."""
     email = payload.email.strip().lower()
-    name = payload.name.strip() or email.split("@")[0]
+    name = payload.name.strip()
+    username = (payload.username or "").strip().lower()
     if not EMAIL_RE.match(email):
         raise HTTPException(400, "Enter a valid email address")
+    if (reason := _username_problem(payload.username)) is not None:
+        raise HTTPException(400, reason)
+    if (reason := _display_name_problem(name, field="Full name", max_len=60)) is not None:
+        raise HTTPException(400, reason)
     if (reason := _password_problem(payload.password)) is not None:
         raise HTTPException(400, reason)
-    if len(name) > 60:
-        raise HTTPException(400, "Name too long")
     phone = "".join(ch for ch in (payload.phone or "") if ch.isdigit())
     if phone and len(phone) != 10:
         raise HTTPException(400, "Phone must be a 10-digit mobile number")
@@ -1127,15 +1170,17 @@ def register(payload: RegisterIn, request: Request):
     try:
         if conn.execute("SELECT 1 FROM users WHERE email=?", (email,)).fetchone():
             raise HTTPException(400, "Account already exists — just sign in.")
+        if conn.execute("SELECT 1 FROM users WHERE username=?", (username,)).fetchone():
+            raise HTTPException(400, "Username already taken — try another one.")
         conn.execute(
-            "INSERT INTO users (name, email, password_hash, email_verified, created_at, phone) VALUES (?,?,?,?,?,?)",
-            (name, email, _hash_password(payload.password), 1, _now().isoformat(), phone))
+            "INSERT INTO users (name, username, email, password_hash, email_verified, created_at, phone) VALUES (?,?,?,?,?,?,?)",
+            (name, username, email, _hash_password(payload.password), 1, _now().isoformat(), phone))
         _record_device(conn, email, request, verified=1)
         conn.commit()
     finally:
         conn.close()
-    _audit_event("auth_register", f"{name} ({email})", {})
-    return {"ok": True, "email": email,
+    _audit_event("auth_register", f"{name} (@{username}, {email})", {})
+    return {"ok": True, "email": email, "username": username,
             "message": "Account created — sign in with your email and password."}
 
 

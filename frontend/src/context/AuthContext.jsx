@@ -66,7 +66,7 @@ export function AuthProvider({ children }) {
     if (method === "otp") result = await auth.requestOtp(data.phone, data.name);
     else if (method === "verify") result = await auth.verifyOtp(data.phone, data.otp, data.name);
     else if (method === "guest") result = await auth.guest(data.name);
-    else if (method === "register") result = await auth.register(data.name, data.email, data.password);
+    else if (method === "register") result = await auth.register(data.name, data.username, data.email, data.password);
     else if (method === "verify-email") result = await auth.verifyEmail(data.email, data.otp);
     else if (method === "email-login") result = await auth.emailLogin(data.email, data.password);
     else if (method === "verify-login") result = await auth.verifyLogin(data.email, data.otp);

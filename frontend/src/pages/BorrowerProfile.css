@@ -129,7 +129,7 @@
 
 /* buttons stay legible on dark */
 .bp-dark .btn-primary { color: #0b2e21; border-color: transparent; }
-.bp-dark .btn-secondary { border-color: var(--border); }
+.bp-dark .btn-secondary { border-color: var(--border); color: #fff; }
 .bp-dark .btn-secondary:hover { background: var(--surface-hover); box-shadow: none; }
 
 /* badges: tinted glass + bright text */

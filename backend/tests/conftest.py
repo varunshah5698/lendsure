@@ -61,7 +61,7 @@ def client(_db):
 def lender(_db):
     with TestClient(app_module.app) as c:
         r = c.post("/api/auth/register",
-                   json={"name": "T", "email": "t@example.com", "password": "Strongpass1"})
+                   json={"name": "Tom", "username": "tom", "email": "t@example.com", "password": "Strongpass1"})
         assert r.status_code == 200, r.text
         r = c.post("/api/auth/login",
                    json={"email": "t@example.com", "password": "Strongpass1"})
@@ -73,6 +73,6 @@ def lender(_db):
 @pytest.fixture()
 def guest(_db):
     with TestClient(app_module.app) as c:
-        r = c.post("/api/auth/guest", json={"name": "G"})
+        r = c.post("/api/auth/guest", json={"name": "guestuser"})
         assert r.status_code == 200, r.text
         yield c

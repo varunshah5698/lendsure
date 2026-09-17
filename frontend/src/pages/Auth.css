@@ -248,6 +248,24 @@
 .zev-input-error { border-color: #dc2626; }
 .zev-error { color: #b91c1c; font-size: 12.5px; font-weight: 600; }
 .zev-info { color: #0a3826; background: #eaf6dc; border-radius: 10px; padding: 8px 10px; font-size: 12.5px; }
+
+/* password strength meter */
+.zev-meter { display: flex; align-items: center; gap: 10px; margin-top: 2px; }
+.zev-meter-track {
+  flex: 1;
+  height: 6px;
+  border-radius: 99px;
+  background: #e6e9df;
+  overflow: hidden;
+}
+.zev-meter-fill { height: 100%; border-radius: 99px; transition: width 0.2s ease, background 0.2s ease; }
+.zev-meter-weak { width: 33%; background: #dc2626; }
+.zev-meter-medium { width: 66%; background: #d97706; }
+.zev-meter-strong { width: 100%; background: #16a34a; }
+.zev-meter-label { font-size: 12px; font-weight: 700; white-space: nowrap; }
+.zev-meter-label.zev-meter-weak { color: #b91c1c; }
+.zev-meter-label.zev-meter-medium { color: #b45309; }
+.zev-meter-label.zev-meter-strong { color: #15803d; }
 .zev-btn { width: 100%; padding: 12px !important; font-size: 14.5px !important; margin-top: 4px; }
 .zev-hint { font-size: 12px; color: #7a847a; text-align: center; margin: 2px 0 0; }
 

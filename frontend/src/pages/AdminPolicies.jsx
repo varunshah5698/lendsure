@@ -109,6 +109,7 @@ export default function AdminPolicies() {
   return (
     <div>
       <PageHeader
+        eyebrow="Governance"
         title="Risk Policies"
         description="Thresholds and bands used by every engine"
         actions={changedKeys.length > 0 ? (

@@ -4,13 +4,19 @@ import "./Modal.css";
 export default function Modal({ open, onClose, title, description, children, actions, width = 480 }) {
   const ref = useRef(null);
   const prevFocus = useRef(null);
+  // Keep the latest close handler in a ref so the focus effect below depends
+  // ONLY on `open`. If it depended on onClose (a new arrow function every
+  // parent render), it would re-run on every keystroke inside the modal and
+  // steal focus from the input after a single character.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
 
   useEffect(() => {
     if (!open) return;
-    // Restore focus to whatever opened the modal when it closes.
+    // Remember what opened the modal so focus returns there on close.
     prevFocus.current = document.activeElement;
     const handler = (e) => {
-      if (e.key === "Escape") { onClose(); return; }
+      if (e.key === "Escape") { onCloseRef.current(); return; }
       // Focus trap: keep Tab cycling inside the dialog.
       if (e.key === "Tab" && ref.current) {
         const items = ref.current.querySelectorAll(
@@ -24,12 +30,15 @@ export default function Modal({ open, onClose, title, description, children, act
       }
     };
     document.addEventListener("keydown", handler);
-    ref.current?.focus();
+    // Focus the first form field when there is one, else the dialog itself.
+    const firstField = ref.current?.querySelector("input, textarea, select");
+    if (firstField) firstField.focus();
+    else ref.current?.focus();
     return () => {
       document.removeEventListener("keydown", handler);
       if (prevFocus.current && prevFocus.current.focus) prevFocus.current.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 

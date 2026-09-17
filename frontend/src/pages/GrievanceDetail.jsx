@@ -101,8 +101,9 @@ export default function GrievanceDetail() {
             </div>
           ))}
           {!closed && (
-            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-              <input value={note} onChange={(e) => setNote(e.target.value)} className="filter-search-input" placeholder="Add an investigation note…" style={{ flex: 1 }} />
+            <div style={{ display: "flex", gap: 8, marginTop: 12, alignItems: "flex-start" }}>
+              <textarea value={note} onChange={(e) => setNote(e.target.value)} className="filter-search-input"
+                rows={2} placeholder="Add an investigation note…" style={{ flex: 1, resize: "vertical" }} />
               <Button variant="primary" size="sm" onClick={addNote}>Add note</Button>
             </div>
           )}

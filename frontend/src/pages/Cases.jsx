@@ -23,6 +23,7 @@ export default function Cases() {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [bid, setBid] = useState("");
+  const [desc, setDesc] = useState("");
   const [assignId, setAssignId] = useState(null);
   const [assignPhone, setAssignPhone] = useState("");
   const [transferId, setTransferId] = useState(null);
@@ -53,11 +54,16 @@ export default function Cases() {
     if (!guardLender(session, toast)) return;
     if (title.trim().length < 4) return toast.error("Give the case a title");
     try {
-      await cases.create({ title: title.trim(), borrower_id: bid.trim() }, session.token);
+      await cases.create({
+        title: title.trim(),
+        borrower_id: bid.trim(),
+        evidence: desc.trim() ? { description: desc.trim() } : {},
+      }, session.token);
       toast.success("Case opened");
       setOpen(false);
       setTitle("");
       setBid("");
+      setDesc("");
       load();
     } catch (e) { toast.error("Create failed: " + e.message); }
   };
@@ -214,6 +220,10 @@ export default function Cases() {
         <input value={title} onChange={(e) => setTitle(e.target.value)} className="filter-search-input" placeholder="e.g. Shared device across 3 borrowers" />
         <label className="review-note-label" style={{ marginTop: 10 }}>Borrower ID (optional)</label>
         <input value={bid} onChange={(e) => setBid(e.target.value)} className="filter-search-input" placeholder="e.g. B10003" />
+        <label className="review-note-label" style={{ marginTop: 10 }}>Details (optional)</label>
+        <textarea value={desc} onChange={(e) => setDesc(e.target.value)} className="filter-search-input"
+          rows={4} placeholder="What did you find? Signals, names, dates, amounts…"
+          style={{ resize: "vertical" }} />
       </Modal>
 
       <Modal open={assignId !== null} onClose={() => setAssignId(null)} title="Assign to territory officer"
@@ -233,7 +243,8 @@ export default function Cases() {
         <label className="review-note-label">Destination city (borrower's city)</label>
         <input value={toCity} onChange={(e) => setToCity(e.target.value)} className="filter-search-input" placeholder="e.g. Pune" />
         <label className="review-note-label" style={{ marginTop: 10 }}>Reason</label>
-        <input value={transferNote} onChange={(e) => setTransferNote(e.target.value)} className="filter-search-input" placeholder="e.g. Borrower relocated; needs local field visit" />
+        <textarea value={transferNote} onChange={(e) => setTransferNote(e.target.value)} className="filter-search-input"
+          rows={3} placeholder="e.g. Borrower relocated; needs local field visit" style={{ resize: "vertical" }} />
         <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>A reviewer approves the move and picks the receiving officer. Nothing moves silently — the full trail stays on the case.</p>
       </Modal>
 

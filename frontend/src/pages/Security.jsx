@@ -78,7 +78,7 @@ export default function Security() {
 
   return (
     <div>
-      <PageHeader title="Security Center" description="Real control state — ? means not implemented, never faked" />
+      <PageHeader eyebrow="Governance" title="Security Center" description="Real control state — ? means not implemented, never faked" />
       <Card style={{ marginBottom: 16 }}>
         <CardHeader><CardTitle>My sessions ({sessList.length})</CardTitle>
           <CardDescription>Every device signed in as you — stay here, kill the rest</CardDescription></CardHeader>
